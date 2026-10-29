@@ -1,0 +1,21 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>New Entry</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack">
+    <ion-segment [(ngModel)]="kind">
+      <ion-segment-button value="Visitor"><ion-label>Visitor</ion-label></ion-segment-button>
+      <ion-segment-button value="Baggage"><ion-label>Baggage</ion-label></ion-segment-button>
+      <ion-segment-button value="Paper"><ion-label>Paper</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <ion-input label="Name" label-placement="floating" fill="outline" [(ngModel)]="name"></ion-input>
+    <ion-input [label]="detailLabel" label-placement="floating" fill="outline" [(ngModel)]="detail"></ion-input>
+
+    <ion-button expand="block" [disabled]="!name.trim() || !detail.trim()" (click)="save()">Save entry</ion-button>
+  </div>
+</ion-content>
