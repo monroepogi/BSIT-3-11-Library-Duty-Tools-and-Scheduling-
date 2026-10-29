@@ -1,0 +1,26 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>Assign Task</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack">
+    <ion-select label="Student" label-placement="floating" fill="outline" placeholder="Choose a student" [(ngModel)]="student">
+      @for (s of students; track s) {
+        <ion-select-option [value]="s">{{ s }}</ion-select-option>
+      }
+    </ion-select>
+
+    <ion-select label="Task type" label-placement="floating" fill="outline" [(ngModel)]="type">
+      <ion-select-option value="Shelving">Shelving</ion-select-option>
+      <ion-select-option value="Circulation">Circulation</ion-select-option>
+      <ion-select-option value="Inventory">Inventory</ion-select-option>
+    </ion-select>
+
+    <ion-input label="Task description" label-placement="floating" fill="outline" [(ngModel)]="title"></ion-input>
+
+    <ion-button expand="block" [disabled]="!student || !title.trim()" (click)="assign()">Assign task</ion-button>
+  </div>
+</ion-content>

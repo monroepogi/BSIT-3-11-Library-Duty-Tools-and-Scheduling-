@@ -1,0 +1,48 @@
+<ion-header [translucent]="true">
+  <ion-toolbar><ion-title>Floor Tasks</ion-title></ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page">
+
+    @if (session.offline) {
+      <div class="vits-banner offline">
+        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: changes will sync later
+      </div>
+    }
+
+    @if (session.role === 'OIC') {
+      <p class="vits-muted">Clocked in now</p>
+      <div class="vits-stack">
+        @for (c of clockedIn; track c) { <span class="vits-chip ok">{{ c }}</span> }
+      </div>
+      <br />
+    }
+
+    @for (t of tasks; track t.id) {
+      <div class="vits-card vits-stack">
+        <div class="vits-row">
+          <strong>{{ t.title }}</strong>
+          <span [class]="'vits-chip ' + chip(t.status)">{{ t.status }}</span>
+        </div>
+        <div class="vits-muted">
+          {{ t.type }} | {{ t.section }}@if (session.role === 'OIC') { | {{ t.assignedTo }} }
+        </div>
+        @if (session.role === 'STUDENT' && (t.status === 'Assigned' || t.status === 'In Progress')) {
+          <ion-button size="small" (click)="markDone(t)">Mark done</ion-button>
+        }
+        @if (session.role === 'OIC' && t.status === 'Done') {
+          <ion-button size="small" color="success" (click)="verify(t)">Verify</ion-button>
+        }
+      </div>
+    } @empty {
+      <div class="vits-empty">No tasks yet.</div>
+    }
+  </div>
+
+  @if (session.role === 'OIC') {
+    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+      <ion-fab-button (click)="assign()"><ion-icon name="add"></ion-icon></ion-fab-button>
+    </ion-fab>
+  }
+</ion-content>

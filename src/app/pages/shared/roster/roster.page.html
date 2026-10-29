@@ -1,0 +1,40 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ session.role === 'OIC' ? 'Section Roster' : 'My Roster' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page">
+
+    @if (session.offline) {
+      <div class="vits-banner offline">
+        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: showing saved schedule
+      </div>
+    }
+
+    <div class="vits-days">
+      @for (d of days; track d) {
+        <div class="vits-day" [class.active]="d === selectedDay" (click)="selectedDay = d">
+          {{ d }}<small>{{ dates[d] }}</small>
+          @if (hasShift(d)) { <div class="vits-dot"></div> }
+        </div>
+      }
+    </div>
+
+    @for (s of dayShifts; track s.id) {
+      <div class="vits-card tap" (click)="open(s.id)">
+        <div class="vits-row">
+          <strong>{{ s.startTime }} - {{ s.endTime }}</strong>
+          <span [class]="'vits-chip ' + chip(s.status)">{{ s.status }}</span>
+        </div>
+        <div class="vits-muted">{{ s.section }} | OIC {{ s.oic }}</div>
+        @if (session.role === 'OIC') {
+          <div class="vits-muted">Student: {{ s.student }}</div>
+        }
+      </div>
+    } @empty {
+      <div class="vits-empty">No duty scheduled for this day.</div>
+    }
+  </div>
+</ion-content>

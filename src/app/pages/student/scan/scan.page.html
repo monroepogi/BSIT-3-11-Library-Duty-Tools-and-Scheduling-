@@ -1,0 +1,19 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>{{ session.onDuty ? 'Scan to Time-Out' : 'Scan to Time-In' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack">
+    <div class="vits-camera">
+      <div class="vits-frame"></div>
+      <span>Point the camera at the OIC's QR code</span>
+    </div>
+    <ion-button expand="block" (click)="simulateScan()">
+      <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon> Simulate successful scan
+    </ion-button>
+    <p class="vits-muted">Mock camera. The real ML Kit scanner is wired in a later phase.</p>
+  </div>
+</ion-content>

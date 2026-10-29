@@ -1,0 +1,100 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Home</ion-title>
+    @if (session.role === 'OIC') {
+      <ion-buttons slot="end">
+        <ion-button (click)="go('/profile')"><ion-icon slot="icon-only" name="person-outline"></ion-icon></ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page">
+
+    @if (session.offline) {
+      <div class="vits-banner offline">
+        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: showing saved data
+      </div>
+    }
+    @if (session.pendingSync > 0) {
+      <div class="vits-banner pending">
+        <ion-icon name="sync-outline"></ion-icon> {{ session.pendingSync }} change(s) waiting to sync
+      </div>
+    }
+
+    <h2 class="vits-heading">Hello, {{ session.userName }}</h2>
+    <p class="vits-muted">{{ session.role === 'OIC' ? 'Officer-in-Charge' : 'Student assistant' }}</p>
+
+    @if (session.role === 'STUDENT') {
+
+      @if (session.onDuty) {
+        <div class="vits-banner duty">
+          <ion-icon name="time-outline"></ion-icon> You are ON DUTY
+        </div>
+        <div class="vits-card">
+          <strong>Shift in progress</strong>
+          <p class="vits-muted">Scan the OIC's QR code again to end your shift.</p>
+          <ion-button expand="block" color="danger" (click)="go('/scan')">
+            <ion-icon slot="start" name="scan-outline"></ion-icon> Scan to Time-Out
+          </ion-button>
+        </div>
+      } @else {
+        <div class="vits-card">
+          <strong>Off duty</strong>
+          <p class="vits-muted">Scan the OIC's QR code to start your shift.</p>
+          <ion-button expand="block" (click)="go('/scan')">
+            <ion-icon slot="start" name="scan-outline"></ion-icon> Scan to Time-In
+          </ion-button>
+        </div>
+      }
+
+      @if (nextShift; as s) {
+        <div class="vits-card tap" (click)="go('/shift/' + s.id)">
+          <div class="vits-muted">Next shift</div>
+          <div class="vits-row">
+            <div>
+              <strong>{{ s.day }}, {{ s.date }}</strong>
+              <div class="vits-muted">{{ s.startTime }} - {{ s.endTime }} | {{ s.section }}</div>
+            </div>
+            <ion-icon name="chevron-forward"></ion-icon>
+          </div>
+        </div>
+      }
+
+      <div class="vits-card vits-row">
+        <div class="vits-ring">
+          <svg viewBox="0 0 36 36">
+            <circle class="bg" cx="18" cy="18" r="15.9155"></circle>
+            <circle class="fg" cx="18" cy="18" r="15.9155" [attr.stroke-dasharray]="percent + ', 100'"></circle>
+          </svg>
+          <div class="label">{{ percent }}%</div>
+        </div>
+        <div>
+          <strong>Duty hours</strong>
+          <div class="vits-muted">{{ hours.done }} of {{ hours.required }} hours completed</div>
+        </div>
+      </div>
+
+      <ion-button expand="block" fill="outline" (click)="go('/visitors')">
+        <ion-icon slot="start" name="book-outline"></ion-icon> Visitor's log
+      </ion-button>
+    }
+
+    @if (session.role === 'OIC') {
+      <ion-button expand="block" (click)="go('/qr-display')">
+        <ion-icon slot="start" name="qr-code-outline"></ion-icon> Show check-in QR
+      </ion-button>
+
+      <h3 class="vits-heading">Clocked-in students</h3>
+      @for (c of clockedIn; track c) {
+        <div class="vits-card vits-row">
+          <span>{{ c }}</span><span class="vits-chip ok">On duty</span>
+        </div>
+      } @empty {
+        <div class="vits-empty">No students clocked in yet.</div>
+      }
+    }
+
+  </div>
+</ion-content>

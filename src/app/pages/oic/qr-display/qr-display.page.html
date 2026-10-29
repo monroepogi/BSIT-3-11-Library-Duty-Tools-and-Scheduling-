@@ -1,0 +1,22 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>Check-in QR</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack">
+    <ion-segment [(ngModel)]="kind" (ionChange)="regenerate()">
+      <ion-segment-button value="IN"><ion-label>Time-In</ion-label></ion-segment-button>
+      <ion-segment-button value="OUT"><ion-label>Time-Out</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <div class="vits-qr">
+      @for (c of cells; track $index) { <i [class.on]="c"></i> }
+    </div>
+
+    <div class="vits-bar"><span [style.width.%]="(seconds / 30) * 100"></span></div>
+    <p class="vits-muted">New code in {{ seconds }}s. Mock QR, not scannable.</p>
+  </div>
+</ion-content>

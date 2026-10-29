@@ -1,0 +1,48 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>Visitor's Log</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page">
+
+    <div class="vits-card vits-row">
+      <div><strong>{{ count('Visitor') }}</strong><div class="vits-muted">Visitors</div></div>
+      <div><strong>{{ count('Baggage') }}</strong><div class="vits-muted">Baggage</div></div>
+      <div><strong>{{ count('Paper') }}</strong><div class="vits-muted">Papers</div></div>
+    </div>
+
+    <ion-segment [(ngModel)]="filter">
+      <ion-segment-button value="All"><ion-label>All</ion-label></ion-segment-button>
+      <ion-segment-button value="Visitor"><ion-label>Visitors</ion-label></ion-segment-button>
+      <ion-segment-button value="Baggage"><ion-label>Baggage</ion-label></ion-segment-button>
+      <ion-segment-button value="Paper"><ion-label>Papers</ion-label></ion-segment-button>
+    </ion-segment>
+    <br />
+
+    @for (e of filtered; track e.id) {
+      <div class="vits-card vits-stack">
+        <div class="vits-row">
+          <strong>{{ e.name }}</strong>
+          <span class="vits-chip info">{{ e.kind }}</span>
+        </div>
+        <div class="vits-muted">{{ e.detail }} | {{ e.time }}</div>
+        @if (e.kind === 'Paper') {
+          @if (e.returned) {
+            <div><span class="vits-chip ok">Returned</span></div>
+          } @else {
+            <div><ion-button size="small" (click)="markReturned(e)">Mark returned</ion-button></div>
+          }
+        }
+      </div>
+    } @empty {
+      <div class="vits-empty">No entries for today.</div>
+    }
+  </div>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="add()"><ion-icon name="add"></ion-icon></ion-fab-button>
+  </ion-fab>
+</ion-content>
