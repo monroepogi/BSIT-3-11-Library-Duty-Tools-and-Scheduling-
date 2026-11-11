@@ -1,11 +1,11 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Home</ion-title>
     @if (session.role === 'OIC') {
       <ion-buttons slot="end">
         <ion-button (click)="go('/profile')"><ion-icon slot="icon-only" name="person-outline"></ion-icon></ion-button>
       </ion-buttons>
     }
+    <ion-title>Hello, {{ session.userName }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -23,7 +23,6 @@
       </div>
     }
 
-    <h2 class="vits-heading">Hello, {{ session.userName }}</h2>
     <p class="vits-muted">{{ session.role === 'OIC' ? 'Officer-in-Charge' : 'Student assistant' }}</p>
 
     @if (session.role === 'STUDENT') {
