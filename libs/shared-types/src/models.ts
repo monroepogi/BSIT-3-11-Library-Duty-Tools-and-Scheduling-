@@ -12,6 +12,11 @@ export type EndpointGroup =
   | 'admin'
   | 'audit';
 
+export interface SupabaseConfig {
+  url: string;
+  anonKey: string;
+}
+
 export interface EnvironmentConfig {
   production: boolean;
   clientId: 'mobile' | 'admin';
@@ -21,6 +26,7 @@ export interface EnvironmentConfig {
   useMockApi: boolean;
   mockEndpoints: Record<EndpointGroup, boolean>;
   enableDevPanel: boolean;
+  supabase?: SupabaseConfig;
 }
 
 export interface PaginatedDto<T> {

@@ -15,7 +15,15 @@
     </div>
 
     <div class="vits-card vits-stack">
-      <strong>Developer panel (mock)</strong>
+      <div class="vits-row">
+        <strong>Supabase Database</strong>
+        <span [class]="'vits-chip ' + dbChipClass">{{ dbStatusLabel }}</span>
+      </div>
+      <ion-button size="small" fill="outline" (click)="checkDatabase()">Test DB connection</ion-button>
+    </div>
+
+    <div class="vits-card vits-stack">
+      <strong>Developer panel</strong>
       <ion-toggle [checked]="session.offline" (ionChange)="toggleOffline($event)">Simulate offline</ion-toggle>
       <div class="vits-muted">Pending sync: {{ session.pendingSync }}</div>
       <ion-button size="small" fill="outline" color="warning" (click)="expireSession()">Simulate session expiry</ion-button>

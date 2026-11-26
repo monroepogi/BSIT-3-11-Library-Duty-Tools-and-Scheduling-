@@ -14,8 +14,8 @@ import {
   IonButton,
   NavController,
 } from '@ionic/angular';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-visitor-new',
@@ -38,7 +38,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class VisitorNewPage {
   private readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
 
   kind: 'Visitor' | 'Baggage' | 'Paper' = 'Visitor';
@@ -55,17 +55,19 @@ export class VisitorNewPage {
 
   async save() {
     const now = new Date();
-    this.data.addVisitor({
-      id: Date.now(),
-      name: this.name,
-      kind: this.kind,
-      detail: this.detail,
-      time:
-        now.getHours().toString().padStart(2, '0') +
-        ':' +
-        now.getMinutes().toString().padStart(2, '0'),
-      returned: this.kind === 'Paper' ? false : undefined,
-    });
+    await this.db.addVisitor(
+      {
+        name: this.name,
+        kind: this.kind,
+        detail: this.detail,
+        time:
+          now.getHours().toString().padStart(2, '0') +
+          ':' +
+          now.getMinutes().toString().padStart(2, '0'),
+        returned: this.kind === 'Paper' ? false : undefined,
+      },
+      this.session.userName,
+    );
     await this.session.record('Entry saved');
     this.nav.back();
   }

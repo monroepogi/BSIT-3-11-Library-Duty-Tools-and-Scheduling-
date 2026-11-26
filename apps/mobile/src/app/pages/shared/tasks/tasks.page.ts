@@ -11,8 +11,8 @@ import {
   NavController,
 } from '@ionic/angular';
 import { Task } from '../../../attributes/task';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-tasks',
@@ -31,7 +31,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class TasksPage implements OnInit {
   readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -46,10 +46,10 @@ export class TasksPage implements OnInit {
   }
 
   async load() {
-    const all = await this.data.getTasks();
+    const [all, clockedIn] = await Promise.all([this.db.getTasks(), this.db.getClockedIn()]);
     this.tasks =
       this.session.role === 'OIC' ? all : all.filter((t) => t.assignedTo === this.session.userName);
-    this.clockedIn = await this.data.getClockedIn();
+    this.clockedIn = clockedIn;
     this.cdr.detectChanges();
   }
 
@@ -59,12 +59,14 @@ export class TasksPage implements OnInit {
 
   async markDone(t: Task) {
     t.status = 'Done';
+    await this.db.updateTaskStatus(t.id, 'Done');
     await this.session.record('Task marked as done');
     this.cdr.detectChanges();
   }
 
   async verify(t: Task) {
     t.status = 'Verified';
+    await this.db.updateTaskStatus(t.id, 'Verified');
     await this.session.record('Task verified');
     this.cdr.detectChanges();
   }

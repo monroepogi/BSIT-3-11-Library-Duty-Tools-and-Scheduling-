@@ -10,8 +10,8 @@ import {
   NavController,
 } from '@ionic/angular';
 import { Shift } from '../../../attributes/shift';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-home',
@@ -21,7 +21,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class HomePage implements OnInit {
   readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -37,12 +37,16 @@ export class HomePage implements OnInit {
   }
 
   async load() {
-    const shifts = await this.data.getShifts();
+    const [shifts, hours, clockedIn] = await Promise.all([
+      this.db.getShifts(),
+      this.db.getStudentHours(this.session.userName),
+      this.db.getClockedIn(),
+    ]);
     this.nextShift = shifts.find((s) => s.student === this.session.userName && s.status === 'Scheduled');
-    this.hours = this.data.hours;
-    this.clockedIn = await this.data.getClockedIn();
+    this.hours = hours;
+    this.clockedIn = clockedIn;
     if (this.session.role === 'STUDENT') {
-      this.session.onDuty = this.data.isClockedIn(this.session.userName);
+      this.session.onDuty = clockedIn.includes(this.session.userName);
     }
     this.cdr.detectChanges();
   }

@@ -14,8 +14,8 @@ import {
   NavController,
 } from '@ionic/angular';
 import { Task } from '../../../attributes/task';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-task-assign',
@@ -37,7 +37,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class TaskAssignPage implements OnInit {
   private readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -51,19 +51,21 @@ export class TaskAssignPage implements OnInit {
   }
 
   async load() {
-    this.students = await this.data.getStudents();
+    this.students = await this.db.getStudents();
     this.cdr.detectChanges();
   }
 
   async assign() {
-    this.data.addTask({
-      id: Date.now(),
-      title: this.title,
-      type: this.type,
-      section: 'Circulation',
-      assignedTo: this.student,
-      status: 'Assigned',
-    });
+    await this.db.addTask(
+      {
+        title: this.title,
+        type: this.type,
+        section: 'Circulation',
+        assignedTo: this.student,
+        status: 'Assigned',
+      },
+      this.session.userName,
+    );
     await this.session.record('Task assigned to ' + this.student);
     this.nav.navigateBack('/oic/tasks');
   }

@@ -11,8 +11,8 @@ import {
 } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
 import { Shift } from '../../../attributes/shift';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-shift-detail',
@@ -23,7 +23,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 export class ShiftDetailPage implements OnInit {
   readonly session = inject(SessionService);
   private readonly route = inject(ActivatedRoute);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -37,7 +37,7 @@ export class ShiftDetailPage implements OnInit {
   }
 
   async load(id: number) {
-    this.shift = await this.data.getShiftById(id);
+    this.shift = await this.db.getShiftById(id);
     this.cdr.detectChanges();
   }
 

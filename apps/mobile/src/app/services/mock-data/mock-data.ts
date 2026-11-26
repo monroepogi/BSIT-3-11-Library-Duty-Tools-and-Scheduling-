@@ -64,6 +64,27 @@ export class MockDataService {
   }
 
   addTask(t: Task) { this.tasks.unshift(t); }
+  updateTaskStatus(id: number, status: Task['status']) {
+    const target = this.tasks.find(t => t.id === id);
+    if (target) target.status = status;
+  }
+
   addRequest(r: DutyRequest) { this.requests.unshift(r); }
+  updateRequestStatus(id: number, status: DutyRequest['status']) {
+    const target = this.requests.find(r => r.id === id);
+    if (target) target.status = status;
+  }
+
   addVisitor(v: VisitorEntry) { this.visitors.unshift(v); }
+  markPaperReturned(id: number) {
+    const target = this.visitors.find(v => v.id === id);
+    if (target) target.returned = true;
+  }
+
+  replaceShifts(shifts: Shift[]) { this.shifts = [...shifts]; }
+  replaceTasks(tasks: Task[]) { this.tasks = [...tasks]; }
+  replaceRequests(requests: DutyRequest[]) { this.requests = [...requests]; }
+  replaceVisitors(visitors: VisitorEntry[]) { this.visitors = [...visitors]; }
+  replaceStudents(students: string[]) { this.students = [...students]; }
+  replaceClockedIn(clockedIn: string[]) { this.clockedIn = [...clockedIn]; }
 }

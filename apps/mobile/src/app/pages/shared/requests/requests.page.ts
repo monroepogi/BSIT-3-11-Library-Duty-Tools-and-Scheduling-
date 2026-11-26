@@ -11,8 +11,8 @@ import {
   NavController,
 } from '@ionic/angular';
 import { DutyRequest } from '../../../attributes/duty-request';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-requests',
@@ -31,7 +31,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class RequestsPage implements OnInit {
   readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -46,7 +46,7 @@ export class RequestsPage implements OnInit {
   }
 
   async load() {
-    const all = await this.data.getRequests();
+    const all = await this.db.getRequests();
     this.requests =
       this.session.role === 'OIC' ? all : all.filter((r) => r.requester === this.session.userName);
     this.cdr.detectChanges();
@@ -75,12 +75,14 @@ export class RequestsPage implements OnInit {
 
   async endorse(r: DutyRequest) {
     r.status = 'Endorsed';
+    await this.db.updateRequestStatus(r.id, 'Endorsed', this.session.userName);
     await this.session.record('Request endorsed');
     this.cdr.detectChanges();
   }
 
   async decline(r: DutyRequest) {
     r.status = 'Rejected';
+    await this.db.updateRequestStatus(r.id, 'Rejected', this.session.userName);
     await this.session.record('Request declined');
     this.cdr.detectChanges();
   }

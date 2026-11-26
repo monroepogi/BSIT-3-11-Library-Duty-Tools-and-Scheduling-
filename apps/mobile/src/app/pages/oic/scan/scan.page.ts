@@ -15,8 +15,8 @@ import {
   IonButton,
   IonIcon,
 } from '@ionic/angular';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-scan',
@@ -41,7 +41,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class ScanPage implements OnInit {
   readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   mode: 'IN' | 'OUT' = 'IN';
@@ -57,7 +57,7 @@ export class ScanPage implements OnInit {
   }
 
   async load() {
-    this.students = await this.data.getStudents();
+    this.students = await this.db.getStudents();
     if (!this.selectedStudent && this.students.length > 0) {
       this.selectedStudent = this.students[0];
     }
@@ -69,7 +69,7 @@ export class ScanPage implements OnInit {
     if (!this.selectedStudent) return;
 
     if (this.mode === 'IN') {
-      const result = this.data.clockIn(this.selectedStudent);
+      const result = await this.db.clockIn(this.selectedStudent, this.session.userName);
       if (result === 'already_in') {
         await this.session.notify(`${this.selectedStudent} is already clocked in`);
         return;
@@ -78,7 +78,7 @@ export class ScanPage implements OnInit {
       return;
     }
 
-    const result = this.data.clockOut(this.selectedStudent);
+    const result = await this.db.clockOut(this.selectedStudent);
     if (result === 'not_in') {
       await this.session.notify(`${this.selectedStudent} is not clocked in`);
       return;

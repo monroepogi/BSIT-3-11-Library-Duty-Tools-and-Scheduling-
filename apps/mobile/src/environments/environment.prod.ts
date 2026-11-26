@@ -18,4 +18,8 @@ export const environment: EnvironmentConfig = {
     audit: false,
   },
   enableDevPanel: false,
+  supabase: {
+    url: 'https://oczbanwkyefufsvuahzn.supabase.co',
+    anonKey: 'sb_publishable_1f9SZkZyv5CHDmWVozw7gg_zI7W-8vg',
+  },
 };

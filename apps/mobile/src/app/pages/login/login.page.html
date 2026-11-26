@@ -4,6 +4,32 @@
     <h1 class="vits-heading">VITS</h1>
     <p class="vits-muted">Library duty scheduling and attendance</p>
 
+    @if (session.isSupabaseConfigured) {
+      <div class="vits-card vits-stack">
+        <ion-input
+          label="University email"
+          label-placement="floating"
+          fill="outline"
+          type="email"
+          [(ngModel)]="email"
+        ></ion-input>
+        <ion-input
+          label="Password"
+          label-placement="floating"
+          fill="outline"
+          type="password"
+          [(ngModel)]="password"
+        ></ion-input>
+        <ion-button
+          expand="block"
+          [disabled]="signingIn || !email.trim() || !password"
+          (click)="signInWithEmail()"
+        >
+          {{ signingIn ? 'Signing in...' : 'Sign in with Supabase' }}
+        </ion-button>
+      </div>
+    }
+
     <ion-button expand="block" size="large" (click)="signInAs('STUDENT')">
       <ion-icon slot="start" name="school-outline"></ion-icon>
       Sign in as Student
@@ -13,6 +39,12 @@
       Sign in as OIC
     </ion-button>
 
-    <p class="vits-muted">Mock sign-in. No credentials needed.</p>
+    <p class="vits-muted">
+      {{
+        session.isSupabaseConfigured
+          ? 'Supabase database connected. Quick role sign-in uses demo profiles.'
+          : 'Demo mode active. Add Supabase credentials in environment.ts to enable live DB.'
+      }}
+    </p>
   </div>
 </ion-content>

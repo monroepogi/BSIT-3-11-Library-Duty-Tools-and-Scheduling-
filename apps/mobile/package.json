@@ -16,6 +16,7 @@
     "ionicons": "^8.0.0"
   },
   "devDependencies": {
+    "@angular/cli": "22.3.0",
     "@capacitor/cli": "^8.5.0"
   }
 }

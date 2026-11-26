@@ -1,8 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, NavController } from '@ionic/angular';
 import { Shift } from '../../../attributes/shift';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-roster',
@@ -12,7 +12,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class RosterPage implements OnInit {
   readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -37,7 +37,7 @@ export class RosterPage implements OnInit {
   }
 
   async load() {
-    const all = await this.data.getShifts();
+    const all = await this.db.getShifts();
     // OIC sees the whole section, student sees only own shifts
     this.shifts =
       this.session.role === 'OIC' ? all : all.filter((s) => s.student === this.session.userName);

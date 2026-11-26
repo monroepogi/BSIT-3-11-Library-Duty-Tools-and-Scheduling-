@@ -18,8 +18,8 @@ import {
   NavController,
 } from '@ionic/angular';
 import { Shift } from '../../../attributes/shift';
+import { LibraryDatabaseService } from '../../../services/database/library-database.service';
 import { SessionService } from '../../../services/session/session';
-import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-request-new',
@@ -45,7 +45,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
 })
 export class RequestNewPage implements OnInit {
   private readonly session = inject(SessionService);
-  private readonly data = inject(MockDataService);
+  private readonly db = inject(LibraryDatabaseService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -63,7 +63,7 @@ export class RequestNewPage implements OnInit {
   }
 
   async load() {
-    const all = await this.data.getShifts();
+    const all = await this.db.getShifts();
     this.shifts = all.filter((s) => s.student === this.session.userName && s.status === 'Scheduled');
     this.cdr.detectChanges();
   }
@@ -76,15 +76,17 @@ export class RequestNewPage implements OnInit {
 
   async submit() {
     const s = this.shifts.find((x) => x.id === this.selectedShift);
-    this.data.addRequest({
-      id: Date.now(),
-      kind: this.kind,
-      shiftLabel: s ? `${s.day} ${s.date}, ${s.startTime}-${s.endTime}` : 'Unspecified shift',
-      reason: this.reason,
-      requester: this.session.userName,
-      submittedOn: 'Today',
-      status: 'Pending OIC',
-    });
+    await this.db.addRequest(
+      {
+        kind: this.kind,
+        shiftLabel: s ? `${s.day} ${s.date}, ${s.startTime}-${s.endTime}` : 'Unspecified shift',
+        reason: this.reason,
+        requester: this.session.userName,
+        submittedOn: 'Today',
+        status: 'Pending OIC',
+      },
+      { shiftId: s?.id, attachmentName: this.fileName || undefined },
+    );
     await this.session.record(this.kind + ' request submitted');
     this.nav.navigateBack('/student/requests');
   }
