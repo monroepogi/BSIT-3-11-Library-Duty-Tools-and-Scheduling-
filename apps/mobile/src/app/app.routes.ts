@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { Role } from './attributes/role';
-import { roleGuard } from './guards/role.guard';
+import { roleChildGuard, roleGuard } from './guards/role.guard';
 
 const STUDENT: Role[] = ['STUDENT'];
 const OIC: Role[] = ['OIC'];
@@ -12,18 +12,22 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
   },
+  {
+    path: 'unlock',
+    loadComponent: () => import('./pages/unlock/unlock.page').then((m) => m.UnlockPage),
+  },
 
   // separate lazy-loaded trees per role
   {
     path: 'student',
     canActivate: [roleGuard(STUDENT)],
-    canActivateChild: [roleGuard(STUDENT)],
+    canActivateChild: [roleChildGuard(STUDENT)],
     loadChildren: () => import('./pages/student/student.routes').then((m) => m.STUDENT_ROUTES),
   },
   {
     path: 'oic',
     canActivate: [roleGuard(OIC)],
-    canActivateChild: [roleGuard(OIC)],
+    canActivateChild: [roleChildGuard(OIC)],
     loadChildren: () => import('./pages/oic/oic.routes').then((m) => m.OIC_ROUTES),
   },
 

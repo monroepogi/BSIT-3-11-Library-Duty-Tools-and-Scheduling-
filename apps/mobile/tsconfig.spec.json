@@ -9,6 +9,7 @@
     "../../libs/shared-types/src/**/*.ts",
     "../../libs/shared-types/fixtures/**/*.ts",
     "../../libs/shared-ui/src/**/*.ts",
-    "../../libs/shared-network/src/**/*.ts"
+    "../../libs/shared-network/src/**/*.ts",
+    "../../libs/shared-crypto/src/**/*.ts"
   ]
 }

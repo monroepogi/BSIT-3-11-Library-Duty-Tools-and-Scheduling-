@@ -40,6 +40,12 @@ export default tseslint.config(
     },
   },
   {
+    files: ['apps/api/**/*.ts'],
+    rules: {
+      '@angular-eslint/prefer-inject': 'off',
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [
       ...angular.configs.templateRecommended,

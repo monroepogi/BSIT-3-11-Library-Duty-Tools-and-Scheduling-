@@ -13,8 +13,8 @@
     </ion-segment>
 
     <ion-select label="Shift" label-placement="floating" fill="outline" placeholder="Choose a shift" [(ngModel)]="selectedShift">
-      @for (s of shifts; track s.id) {
-        <ion-select-option [value]="s.id">{{ s.day }} {{ s.date }}, {{ s.startTime }}-{{ s.endTime }}</ion-select-option>
+      @for (s of shifts(); track s.id) {
+        <ion-select-option [value]="s.id">{{ s.shiftDate }} • {{ s.sectionName }}</ion-select-option>
       }
     </ion-select>
 

@@ -20,7 +20,8 @@
       "@vits/shared-types": ["./libs/shared-types/src/index.ts"],
       "@vits/shared-types/fixtures": ["./libs/shared-types/fixtures/index.ts"],
       "@vits/shared-ui": ["./libs/shared-ui/src/index.ts"],
-      "@vits/shared-network": ["./libs/shared-network/src/index.ts"]
+      "@vits/shared-network": ["./libs/shared-network/src/index.ts"],
+      "@vits/shared-crypto": ["./libs/shared-crypto/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

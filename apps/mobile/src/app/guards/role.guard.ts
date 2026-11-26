@@ -1,12 +1,23 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
 import { Role } from '../attributes/role';
-import { SessionService } from '../services/session/session';
+import { AuthService } from '../core/auth.service';
 
-// Not signed in -> /login. Wrong role -> bounced to own home.
-export const roleGuard = (allowed: Role[]): CanActivateFn => () => {
-  const session = inject(SessionService);
-  const router = inject(Router);
-  if (!session.role) return router.parseUrl('/login');
-  return allowed.includes(session.role) ? true : router.parseUrl(session.homeUrl());
-};
+// Checks session hydration + offline lock + role ownership
+export const roleGuard =
+  (allowed: Role[]): CanActivateFn =>
+  async () => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+    await auth.ensureInitialized();
+
+    const currentRole = auth.role();
+    if (!currentRole) return router.parseUrl('/login');
+    if (auth.locked()) return router.parseUrl('/unlock');
+    return allowed.includes(currentRole) ? true : router.parseUrl(auth.homeUrl());
+  };
+
+export const roleChildGuard =
+  (allowed: Role[]): CanActivateChildFn =>
+  (route, state) =>
+    roleGuard(allowed)(route, state);
