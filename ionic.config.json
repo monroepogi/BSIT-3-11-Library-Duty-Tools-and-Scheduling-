@@ -1,0 +1,13 @@
+{
+  "defaultProject": "mobile",
+  "projects": {
+    "mobile": {
+      "name": "VITS Mobile",
+      "integrations": {
+        "capacitor": {}
+      },
+      "type": "angular-standalone",
+      "root": "apps/mobile"
+    }
+  }
+}

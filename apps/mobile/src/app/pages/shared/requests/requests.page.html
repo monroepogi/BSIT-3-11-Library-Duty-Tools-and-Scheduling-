@@ -1,0 +1,45 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ session.role === 'OIC' ? 'Endorsement Inbox' : 'My Requests' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page">
+
+    @for (r of requests; track r.id) {
+      <div class="vits-card">
+        <div class="vits-row">
+          <strong>{{ r.kind }} request</strong>
+          <span [class]="'vits-chip ' + chip(r.status)">{{ r.status }}</span>
+        </div>
+        <div class="vits-muted">{{ r.shiftLabel }}</div>
+        <div class="vits-muted">"{{ r.reason }}" | {{ r.submittedOn }}</div>
+        @if (session.role === 'OIC') {
+          <div class="vits-muted">From: {{ r.requester }}</div>
+        }
+
+        <div class="vits-steps">
+          @for (st of steps; track st; let i = $index) {
+            <div [class]="'vits-step ' + stepClass(i, r)">{{ st }}</div>
+          }
+        </div>
+
+        @if (session.role === 'OIC' && r.status === 'Pending OIC') {
+          <div class="vits-row">
+            <ion-button size="small" fill="outline" color="danger" (click)="decline(r)">Decline</ion-button>
+            <ion-button size="small" (click)="endorse(r)">Endorse</ion-button>
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="vits-empty">No requests yet.</div>
+    }
+  </div>
+
+  @if (session.role === 'STUDENT') {
+    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+      <ion-fab-button (click)="newRequest()"><ion-icon name="add"></ion-icon></ion-fab-button>
+    </ion-fab>
+  }
+</ion-content>

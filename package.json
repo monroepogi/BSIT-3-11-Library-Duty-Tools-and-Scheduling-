@@ -1,0 +1,50 @@
+{
+  "name": "vits-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.10.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev:mobile": "node tools/run-ng.mjs serve mobile --port 4200",
+    "build:mobile": "node tools/run-ng.mjs build mobile",
+    "cap:sync": "node tools/run-cap.mjs sync android",
+    "cap:open:android": "node tools/run-cap.mjs open android",
+    "test": "node tools/run-ng.mjs test mobile --watch=false",
+    "lint": "node node_modules/eslint/bin/eslint.js . && node tools/check-style-tokens.mjs",
+    "typecheck": "node node_modules/@angular/compiler-cli/bundles/src/bin/ngc.js -p apps/mobile/tsconfig.app.json --noEmit && node node_modules/typescript/bin/tsc -p apps/mobile/tsconfig.spec.json --noEmit"
+  },
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/network": "^8.0.0",
+    "@ionic/angular": "^9.0.0",
+    "ionicons": "^8.0.0",
+    "rxjs": "~7.8.2",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.0",
+    "@angular/cli": "^22.2.0",
+    "@angular/compiler-cli": "^22.2.0",
+    "@capacitor/cli": "^8.5.0",
+    "@eslint/js": "^9.25.0",
+    "@types/node": "^22.15.0",
+    "angular-eslint": "^22.6.0",
+    "eslint": "^9.25.0",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.5.3",
+    "sass": "^1.86.0",
+    "typescript": "~6.0.0",
+    "typescript-eslint": "^8.40.0",
+    "vitest": "^4.0.0"
+  }
+}

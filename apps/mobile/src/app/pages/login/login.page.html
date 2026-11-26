@@ -1,0 +1,18 @@
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack vits-center">
+    <div class="vits-logo"><ion-icon name="book-outline"></ion-icon></div>
+    <h1 class="vits-heading">VITS</h1>
+    <p class="vits-muted">Library duty scheduling and attendance</p>
+
+    <ion-button expand="block" size="large" (click)="signInAs('STUDENT')">
+      <ion-icon slot="start" name="school-outline"></ion-icon>
+      Sign in as Student
+    </ion-button>
+    <ion-button expand="block" size="large" fill="outline" (click)="signInAs('OIC')">
+      <ion-icon slot="start" name="shield-checkmark-outline"></ion-icon>
+      Sign in as OIC
+    </ion-button>
+
+    <p class="vits-muted">Mock sign-in. No credentials needed.</p>
+  </div>
+</ion-content>

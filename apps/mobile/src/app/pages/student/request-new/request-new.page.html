@@ -1,0 +1,31 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>New Request</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack">
+    <ion-segment [(ngModel)]="kind">
+      <ion-segment-button value="Swap"><ion-label>Shift swap</ion-label></ion-segment-button>
+      <ion-segment-button value="Leave"><ion-label>Leave</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <ion-select label="Shift" label-placement="floating" fill="outline" placeholder="Choose a shift" [(ngModel)]="selectedShift">
+      @for (s of shifts; track s.id) {
+        <ion-select-option [value]="s.id">{{ s.day }} {{ s.date }}, {{ s.startTime }}-{{ s.endTime }}</ion-select-option>
+      }
+    </ion-select>
+
+    <ion-textarea label="Reason" label-placement="floating" fill="outline" [autoGrow]="true" [(ngModel)]="reason"></ion-textarea>
+
+    <input #file type="file" hidden (change)="onFile($event)" />
+    <ion-button fill="outline" (click)="file.click()">
+      <ion-icon slot="start" name="attach-outline"></ion-icon>
+      {{ fileName || 'Attach a file (optional)' }}
+    </ion-button>
+
+    <ion-button expand="block" [disabled]="!selectedShift || !reason.trim()" (click)="submit()">Submit request</ion-button>
+  </div>
+</ion-content>

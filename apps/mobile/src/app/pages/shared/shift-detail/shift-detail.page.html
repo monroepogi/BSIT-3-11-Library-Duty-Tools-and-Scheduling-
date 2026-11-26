@@ -1,0 +1,28 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>Shift Details</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (shift; as s) {
+    <div class="vits-page">
+      <div class="vits-card vits-stack">
+        <div class="vits-row"><strong>{{ s.day }}, {{ s.date }}</strong><span class="vits-chip info">{{ s.status }}</span></div>
+        <div class="vits-row"><span class="vits-muted">Time</span><span>{{ s.startTime }} - {{ s.endTime }}</span></div>
+        <div class="vits-row"><span class="vits-muted">Section</span><span>{{ s.section }}</span></div>
+        <div class="vits-row"><span class="vits-muted">OIC</span><span>{{ s.oic }}</span></div>
+        @if (session.role === 'OIC') {
+          <div class="vits-row"><span class="vits-muted">Student</span><span>{{ s.student }}</span></div>
+        }
+      </div>
+
+      @if (session.role === 'STUDENT') {
+        <ion-button expand="block" fill="outline" (click)="requestChange()">Request swap or leave</ion-button>
+      }
+    </div>
+  } @else {
+    <p class="vits-empty">Loading shift...</p>
+  }
+</ion-content>

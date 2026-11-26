@@ -1,0 +1,34 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>Scan Student QR</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack">
+    <ion-segment [(ngModel)]="mode">
+      <ion-segment-button value="IN"><ion-label>Time-In</ion-label></ion-segment-button>
+      <ion-segment-button value="OUT"><ion-label>Time-Out</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <div class="vits-camera">
+      <div class="vits-frame"></div>
+      <span>Point the camera at the Student's Duty QR ({{ mode === 'IN' ? 'Time-In' : 'Time-Out' }})</span>
+    </div>
+
+    <div class="vits-card">
+      <ion-select label="Mock student QR" labelPlacement="stacked" [(ngModel)]="selectedStudent">
+        @for (s of students; track s) {
+          <ion-select-option [value]="s">{{ s }}</ion-select-option>
+        }
+      </ion-select>
+    </div>
+
+    <ion-button expand="block" [color]="mode === 'OUT' ? 'danger' : 'primary'" (click)="simulateScan()">
+      <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon>
+      Simulate {{ mode === 'IN' ? 'Time-In' : 'Time-Out' }} scan
+    </ion-button>
+    <p class="vits-muted">Mock camera. Explicit mode prevents accidental double-scan flip-flops. Real ML Kit scanner is wired in Phase 3.</p>
+  </div>
+</ion-content>

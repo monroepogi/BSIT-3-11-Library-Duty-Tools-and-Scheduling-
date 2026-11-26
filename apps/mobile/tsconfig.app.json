@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc/mobile",
+    "types": []
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../libs/shared-types/src/**/*.ts",
+    "../../libs/shared-types/fixtures/**/*.ts",
+    "../../libs/shared-ui/src/**/*.ts",
+    "../../libs/shared-network/src/**/*.ts"
+  ],
+  "exclude": ["src/**/*.spec.ts", "../../libs/**/*.spec.ts"]
+}

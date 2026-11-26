@@ -1,0 +1,22 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-title>My Duty QR</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack vits-center-text">
+    <div class="vits-card">
+      <strong>{{ session.userName }}</strong>
+      <div class="vits-muted">Show this rotating QR to your OIC to Time-In or Time-Out.</div>
+    </div>
+
+    <div class="vits-qr">
+      @for (c of cells; track $index) { <i [class.on]="c"></i> }
+    </div>
+
+    <div class="vits-bar"><span [style.width.%]="(seconds / 30) * 100"></span></div>
+    <p class="vits-muted">New code in {{ seconds }}s. Works offline. Mock QR, not scannable.</p>
+  </div>
+</ion-content>

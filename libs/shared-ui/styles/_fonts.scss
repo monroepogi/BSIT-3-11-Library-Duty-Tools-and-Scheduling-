@@ -1,0 +1,35 @@
+// Owner-supplied licensed fonts (placed in libs/shared-ui/assets/fonts/ -> /assets/fonts/).
+// Falls back cleanly to system-ui / sans-serif when font files are not yet supplied.
+
+@font-face {
+  font-family: 'Knockout Welterweight';
+  src:
+    local('Knockout Welterweight'),
+    local('Knockout-Welterweight'),
+    url('/assets/fonts/Knockout-Welterweight.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marjari';
+  src:
+    local('Marjari'),
+    local('Marjari Regular'),
+    url('/assets/fonts/Marjari-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Marjari';
+  src:
+    local('Marjari Bold'),
+    local('Marjari-Bold'),
+    url('/assets/fonts/Marjari-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

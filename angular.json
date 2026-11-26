@@ -1,0 +1,92 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "pnpm",
+    "analytics": false
+  },
+  "newProjectRoot": "apps",
+  "projects": {
+    "mobile": {
+      "projectType": "application",
+      "root": "apps/mobile",
+      "sourceRoot": "apps/mobile/src",
+      "prefix": "vits",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/apps/mobile",
+            "browser": "apps/mobile/src/main.ts",
+            "tsConfig": "apps/mobile/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": ["libs/shared-ui/styles"]
+            },
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "apps/mobile/public"
+              },
+              {
+                "glob": "**/*.woff2",
+                "input": "libs/shared-ui/assets/fonts",
+                "output": "/assets/fonts"
+              }
+            ],
+            "styles": ["apps/mobile/src/global.scss"]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1.2mb",
+                  "maximumError": "2mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kb",
+                  "maximumError": "16kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "apps/mobile/src/environments/environment.ts",
+                  "with": "apps/mobile/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "mobile:build:production"
+            },
+            "development": {
+              "buildTarget": "mobile:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "apps/mobile/tsconfig.spec.json",
+            "buildTarget": "mobile:build:development",
+            "include": ["**/*.spec.ts", "../../../libs/**/*.spec.ts"]
+          }
+        }
+      }
+    }
+  }
+}

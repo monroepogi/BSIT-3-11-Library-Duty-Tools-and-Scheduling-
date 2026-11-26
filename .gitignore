@@ -1,0 +1,42 @@
+# Dependencies & Build Outputs
+node_modules/
+dist/
+.angular/
+coverage/
+*.tsbuildinfo
+
+# Secrets, Keys & Environment (Never commit!)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+**/google-services.json
+
+# Licensed Owner-Supplied Font Binaries (Never commit!)
+libs/shared-ui/assets/fonts/*.woff
+libs/shared-ui/assets/fonts/*.woff2
+libs/shared-ui/assets/fonts/*.ttf
+libs/shared-ui/assets/fonts/*.otf
+
+# Android Build Artifacts
+apps/mobile/android/.gradle/
+apps/mobile/android/app/build/
+apps/mobile/android/build/
+apps/mobile/android/local.properties
+apps/mobile/android/capacitor-cordova-android-plugins/
+
+# Local-only notes & tooling
+AGENTS.md
+.agents/
+docs/
+
+# IDE & OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
