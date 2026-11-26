@@ -1,20 +1,20 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader,
-  IonToolbar,
-  IonButtons,
   IonBackButton,
-  IonTitle,
+  IonButton,
+  IonButtons,
   IonContent,
+  IonHeader,
+  IonInput,
+  IonLabel,
   IonSegment,
   IonSegmentButton,
-  IonLabel,
-  IonInput,
-  IonButton,
+  IonTitle,
+  IonToolbar,
   NavController,
 } from '@ionic/angular';
-import { SessionService } from '../../../services/session/session';
+import { AuthService } from '../../../core/auth.service';
 import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
@@ -37,7 +37,7 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
   ],
 })
 export class VisitorNewPage {
-  private readonly session = inject(SessionService);
+  private readonly auth = inject(AuthService);
   private readonly data = inject(MockDataService);
   private readonly nav = inject(NavController);
 
@@ -53,7 +53,7 @@ export class VisitorNewPage {
         : 'Purpose of visit';
   }
 
-  async save() {
+  async save(): Promise<void> {
     const now = new Date();
     this.data.addVisitor({
       id: Date.now(),
@@ -66,7 +66,7 @@ export class VisitorNewPage {
         now.getMinutes().toString().padStart(2, '0'),
       returned: this.kind === 'Paper' ? false : undefined,
     });
-    await this.session.record('Entry saved');
+    await this.auth.notify('Entry saved (Phase 6 mock)');
     this.nav.back();
   }
 }

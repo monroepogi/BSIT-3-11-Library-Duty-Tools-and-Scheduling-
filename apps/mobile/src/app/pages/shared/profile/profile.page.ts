@@ -1,23 +1,28 @@
 import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
-  IonHeader,
-  IonToolbar,
-  IonButtons,
   IonBackButton,
-  IonTitle,
-  IonContent,
-  IonIcon,
-  IonToggle,
   IonButton,
-  NavController,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonInput,
+  IonTitle,
+  IonToggle,
+  IonToolbar,
 } from '@ionic/angular';
-import { SessionService } from '../../../services/session/session';
+import { MockChaosService } from '@vits/shared-network';
+import { AuthService } from '../../../core/auth.service';
+import { OutboxRepository } from '../../../core/db/repositories';
+import { SyncService } from '../../../core/sync/sync.service';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.page.html',
   standalone: true,
   imports: [
+    FormsModule,
     IonHeader,
     IonToolbar,
     IonButtons,
@@ -25,26 +30,42 @@ import { SessionService } from '../../../services/session/session';
     IonTitle,
     IonContent,
     IonIcon,
+    IonInput,
     IonToggle,
     IonButton,
   ],
 })
 export class ProfilePage {
-  readonly session = inject(SessionService);
-  private readonly nav = inject(NavController);
+  readonly auth = inject(AuthService);
+  readonly sync = inject(SyncService);
+  readonly outbox = inject(OutboxRepository);
+  readonly chaos = inject(MockChaosService);
 
-  toggleOffline(ev: Event) {
-    this.session.setOffline((ev as CustomEvent).detail.checked);
+  pinInput = '';
+
+  toggleOffline(ev: Event): void {
+    const offline = Boolean((ev as CustomEvent).detail.checked);
+    this.chaos.forcedOffline.set(offline);
+    if (!offline) {
+      void this.sync.syncNow().catch(() => undefined);
+    }
   }
 
-  signOut() {
-    this.session.signOut();
-    this.nav.navigateRoot('/login');
+  async savePin(): Promise<void> {
+    if (this.pinInput.trim().length < 4) return;
+    await this.auth.setupOfflinePin(this.pinInput);
+    this.pinInput = '';
   }
 
-  expireSession() {
-    this.session.signOut();
-    this.nav.navigateRoot('/login');
-    this.session.notify('Session expired. Please sign in again.');
+  lockNow(): void {
+    this.auth.lockSession();
+  }
+
+  async syncNow(): Promise<void> {
+    await this.sync.syncNow().catch(() => undefined);
+  }
+
+  async signOut(): Promise<void> {
+    await this.auth.logout();
   }
 }

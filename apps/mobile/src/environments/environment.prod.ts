@@ -3,8 +3,8 @@ import type { EnvironmentConfig } from '@vits/shared-types';
 export const environment: EnvironmentConfig = {
   production: true,
   clientId: 'mobile',
-  apiBaseUrl: 'https://api.vits.university.edu',
-  requestTimeoutMs: 15000,
+  apiBaseUrl: 'http://localhost:3000',
+  requestTimeoutMs: 8000,
   libraryTimezone: 'Asia/Manila',
   useMockApi: false,
   mockEndpoints: {

@@ -87,6 +87,87 @@
           }
         }
       }
+    },
+    "admin": {
+      "projectType": "application",
+      "root": "apps/admin",
+      "sourceRoot": "apps/admin/src",
+      "prefix": "vits",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/apps/admin",
+            "browser": "apps/admin/src/main.ts",
+            "tsConfig": "apps/admin/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": {
+              "includePaths": ["libs/shared-ui/styles"]
+            },
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "apps/admin/public"
+              },
+              {
+                "glob": "**/*.woff2",
+                "input": "libs/shared-ui/assets/fonts",
+                "output": "/assets/fonts"
+              }
+            ],
+            "styles": ["apps/admin/src/global.scss"]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1.2mb",
+                  "maximumError": "2mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kb",
+                  "maximumError": "16kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "apps/admin/src/environments/environment.ts",
+                  "with": "apps/admin/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "admin:build:production"
+            },
+            "development": {
+              "buildTarget": "admin:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "apps/admin/tsconfig.spec.json",
+            "buildTarget": "admin:build:development",
+            "include": ["**/*.spec.ts"]
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc/api",
+    "emitDecoratorMetadata": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../libs/shared-types/src/**/*.ts",
+    "../../libs/shared-crypto/src/**/*.ts"
+  ],
+  "exclude": ["src/**/*.spec.ts", "../../libs/**/*.spec.ts"]
+}

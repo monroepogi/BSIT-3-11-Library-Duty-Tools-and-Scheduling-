@@ -1,0 +1,34 @@
+<ion-content [fullscreen]="true">
+  <div class="vits-page vits-stack vits-center">
+    <div class="vits-logo"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
+    <h1 class="vits-heading">Unlock VITS</h1>
+    <p class="vits-muted">
+      Signed in as <strong>{{ auth.userName() }}</strong>
+      @if (auth.isOffline()) {
+        <span> (Offline mode ready)</span>
+      }
+    </p>
+
+    @if (error()) {
+      <div class="vits-banner bad" role="alert">{{ error() }}</div>
+    }
+
+    <ion-input
+      [label]="auth.hasPinConfigured() ? 'Enter Offline PIN' : 'Create 4–6 Digit Offline PIN'"
+      label-placement="floating"
+      fill="outline"
+      type="password"
+      inputmode="numeric"
+      [(ngModel)]="pin"
+      (keyup.enter)="unlock()"
+    ></ion-input>
+
+    <ion-button expand="block" size="large" [disabled]="pin.trim().length < 4" (click)="unlock()">
+      Unlock
+    </ion-button>
+
+    <ion-button expand="block" fill="outline" color="danger" (click)="signOut()">
+      Sign out / Switch account
+    </ion-button>
+  </div>
+</ion-content>

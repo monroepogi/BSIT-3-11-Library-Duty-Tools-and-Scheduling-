@@ -1,24 +1,24 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader,
-  IonToolbar,
-  IonButtons,
   IonBackButton,
-  IonTitle,
+  IonButton,
+  IonButtons,
   IonContent,
+  IonHeader,
+  IonIcon,
+  IonLabel,
   IonSegment,
   IonSegmentButton,
-  IonLabel,
   IonSelect,
   IonSelectOption,
   IonTextarea,
-  IonButton,
-  IonIcon,
+  IonTitle,
+  IonToolbar,
   NavController,
 } from '@ionic/angular';
-import { Shift } from '../../../attributes/shift';
-import { SessionService } from '../../../services/session/session';
+import { AuthService } from '../../../core/auth.service';
+import { ShiftsRepository } from '../../../core/db/repositories';
 import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
@@ -43,49 +43,39 @@ import { MockDataService } from '../../../services/mock-data/mock-data';
     IonIcon,
   ],
 })
-export class RequestNewPage implements OnInit {
-  private readonly session = inject(SessionService);
+export class RequestNewPage {
+  private readonly auth = inject(AuthService);
+  private readonly shiftsRepo = inject(ShiftsRepository);
   private readonly data = inject(MockDataService);
   private readonly nav = inject(NavController);
-  private readonly cdr = inject(ChangeDetectorRef);
+
+  readonly shifts = computed(() => {
+    const uid = this.auth.currentUser()?.id;
+    return this.shiftsRepo.shifts().filter((s) => s.userId === uid && s.status !== 'completed');
+  });
 
   kind: 'Swap' | 'Leave' = 'Swap';
-  shifts: Shift[] = [];
-  selectedShift?: number;
+  selectedShift = '';
   reason = '';
   fileName = '';
 
-  ngOnInit() {
-    this.load();
-  }
-  ionViewWillEnter() {
-    this.load();
-  }
-
-  async load() {
-    const all = await this.data.getShifts();
-    this.shifts = all.filter((s) => s.student === this.session.userName && s.status === 'Scheduled');
-    this.cdr.detectChanges();
-  }
-
-  onFile(ev: Event) {
+  onFile(ev: Event): void {
     const f = (ev.target as HTMLInputElement).files?.[0];
     this.fileName = f ? f.name : '';
-    this.cdr.detectChanges();
   }
 
-  async submit() {
-    const s = this.shifts.find((x) => x.id === this.selectedShift);
+  async submit(): Promise<void> {
+    const s = this.shifts().find((x) => x.id === this.selectedShift);
     this.data.addRequest({
       id: Date.now(),
       kind: this.kind,
-      shiftLabel: s ? `${s.day} ${s.date}, ${s.startTime}-${s.endTime}` : 'Unspecified shift',
+      shiftLabel: s ? `${s.shiftDate} • ${s.sectionName}` : 'Unspecified shift',
       reason: this.reason,
-      requester: this.session.userName,
+      requester: this.auth.userName(),
       submittedOn: 'Today',
       status: 'Pending OIC',
     });
-    await this.session.record(this.kind + ' request submitted');
-    this.nav.navigateBack('/student/requests');
+    await this.auth.notify(`${this.kind} request submitted (Phase 6 mock)`);
+    await this.nav.navigateBack('/student/requests');
   }
 }

@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/student/home"></ion-back-button></ion-buttons>
     <ion-title>My Duty QR</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -8,15 +8,23 @@
 <ion-content [fullscreen]="true">
   <div class="vits-page vits-stack vits-center-text">
     <div class="vits-card">
-      <strong>{{ session.userName }}</strong>
-      <div class="vits-muted">Show this rotating QR to your OIC to Time-In or Time-Out.</div>
+      <strong>{{ auth.userName() }}</strong>
+      <div class="vits-muted">Show this rotating Ed25519-signed QR to your OIC to Time-In or Time-Out.</div>
     </div>
 
-    <div class="vits-qr">
-      @for (c of cells; track $index) { <i [class.on]="c"></i> }
-    </div>
+    @if (error()) {
+      <div class="vits-banner bad" role="alert">{{ error() }}</div>
+    } @else {
+      <div class="vits-qr">
+        <canvas #qrCanvas width="240" height="240"></canvas>
+      </div>
 
-    <div class="vits-bar"><span [style.width.%]="(seconds / 30) * 100"></span></div>
-    <p class="vits-muted">New code in {{ seconds }}s. Works offline. Mock QR, not scannable.</p>
+      <div class="vits-bar"><span [style.width.%]="(seconds() / 30) * 100"></span></div>
+      <p class="vits-muted">New signed code in {{ seconds() }}s • Works 100% offline.</p>
+
+      <ion-button fill="outline" size="small" (click)="copyPayload()">
+        Copy QR Payload (Browser Test)
+      </ion-button>
+    }
   </div>
 </ion-content>

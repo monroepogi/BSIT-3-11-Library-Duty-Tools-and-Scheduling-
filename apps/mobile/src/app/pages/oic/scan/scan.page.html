@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/oic/home"></ion-back-button></ion-buttons>
     <ion-title>Scan Student QR</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -14,21 +14,39 @@
 
     <div class="vits-camera">
       <div class="vits-frame"></div>
-      <span>Point the camera at the Student's Duty QR ({{ mode === 'IN' ? 'Time-In' : 'Time-Out' }})</span>
+      <span>Point camera at Student's Duty QR ({{ mode === 'IN' ? 'Time-In' : 'Time-Out' }})</span>
+      @if (scanner.nativeCameraAvailable) {
+        <ion-button size="small" (click)="openCamera()">Open Camera Scanner</ion-button>
+      }
     </div>
 
-    <div class="vits-card">
-      <ion-select label="Mock student QR" labelPlacement="stacked" [(ngModel)]="selectedStudent">
-        @for (s of students; track s) {
-          <ion-select-option [value]="s">{{ s }}</ion-select-option>
-        }
-      </ion-select>
-    </div>
+    @if (error()) {
+      <div class="vits-banner bad" role="alert">{{ error() }}</div>
+    }
+    @if (statusMessage()) {
+      <div class="vits-banner duty" role="status">{{ statusMessage() }}</div>
+    }
 
-    <ion-button expand="block" [color]="mode === 'OUT' ? 'danger' : 'primary'" (click)="simulateScan()">
+    <ion-textarea
+      label="Scanned / Copied Student QR Payload"
+      label-placement="floating"
+      fill="outline"
+      [rows]="4"
+      [(ngModel)]="pastedPayload"
+      placeholder="Paste copied JSON from Student My Duty QR..."
+    ></ion-textarea>
+
+    <ion-button
+      expand="block"
+      [color]="mode === 'OUT' ? 'danger' : 'primary'"
+      [disabled]="!pastedPayload.trim()"
+      (click)="verifyAndRecord()"
+    >
       <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon>
-      Simulate {{ mode === 'IN' ? 'Time-In' : 'Time-Out' }} scan
+      Verify & Record {{ mode === 'IN' ? 'Time-In' : 'Time-Out' }}
     </ion-button>
-    <p class="vits-muted">Mock camera. Explicit mode prevents accidental double-scan flip-flops. Real ML Kit scanner is wired in Phase 3.</p>
+    <p class="vits-muted">
+      Verifies Ed25519 Student & server signatures 100% offline, co-signs receipt, and queues in Outbox.
+    </p>
   </div>
 </ion-content>

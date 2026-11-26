@@ -112,6 +112,7 @@ ion-tab-button {
 .vits-banner.duty    { background: var(--vits-success); }
 .vits-banner.offline { background: var(--vits-warning); }
 .vits-banner.pending { background: var(--vits-info); }
+.vits-banner.bad     { background: var(--vits-danger); }
 
 .vits-days { display: flex; gap: var(--vits-space-2); margin-bottom: var(--vits-space-4); overflow-x: auto; }
 .vits-day {
@@ -183,6 +184,6 @@ ion-tab-button {
   box-shadow: var(--vits-shadow);
   box-sizing: content-box;
 }
-.vits-qr i.on { background: #000000; }
+.vits-qr canvas { width: 100%; height: 100%; display: block; }
 .vits-bar { height: 6px; border-radius: 3px; background: var(--vits-border); overflow: hidden; }
 .vits-bar > span { display: block; height: 100%; background: var(--vits-accent); transition: width 1s linear; }

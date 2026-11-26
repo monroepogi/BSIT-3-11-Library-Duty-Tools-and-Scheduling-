@@ -101,6 +101,42 @@ export interface IssueDutyCertRequestDto {
   oicDevicePubkey: string;
 }
 
+export interface StudentPassCertificateDto {
+  id: string;
+  studentId: string;
+  studentName: string;
+  universityId: string;
+  studentDevicePubkey: string;
+  validFrom: string;
+  validTo: string;
+  kid: string;
+  signature: string;
+}
+
+export interface IssueStudentPassCertRequestDto {
+  deviceId: string;
+  studentDevicePubkey: string;
+}
+
+export interface StudentQrPayloadDto {
+  version: 1;
+  cert: StudentPassCertificateDto;
+  ts: number;
+  nonce: string;
+  sig: string;
+}
+
+export interface OicAttendanceReceiptDto {
+  version: 1;
+  oicCert: DutyCertificateDto;
+  studentQr: StudentQrPayloadDto;
+  action: 'IN' | 'OUT';
+  oicTs: number;
+  oicMonoMs: number;
+  bootId: string;
+  oicSig: string;
+}
+
 export interface RotatingQrPayloadDto {
   version: 1;
   cert: DutyCertificateDto;
@@ -172,7 +208,7 @@ export interface SectionRosterDto {
 }
 
 export type TaskCategory = 'shelving' | 'circulation' | 'inventory' | 'desk_support';
-export type TaskStatus = 'todo' | 'in_progress' | 'done';
+export type TaskStatus = 'todo' | 'in_progress' | 'done' | 'verified';
 
 export interface TaskDto {
   id: string;
@@ -545,6 +581,26 @@ export interface SyncPushResponseDto {
   results: SyncOpResultDto[];
 }
 
+export interface SyncPullChangeDto {
+  changeSeq: number;
+  table: 'profile' | 'shifts' | 'tasks' | 'hours_summary';
+  id: string;
+  op: 'upsert' | 'delete';
+  data: Record<string, unknown>;
+  version: number;
+}
+
+export interface SyncPullResponseDto {
+  changes: SyncPullChangeDto[];
+  nextCursor: number;
+  hasMore: boolean;
+  serverTime: string;
+}
+
+export interface ShiftSignoffRequestDto {
+  remarks?: string;
+}
+
 export function getLibraryDateString(
   date: Date = new Date(),
   timeZone = 'Asia/Manila',
@@ -559,4 +615,191 @@ export function getLibraryDateString(
   const month = parts.find((p) => p.type === 'month')?.value ?? '01';
   const day = parts.find((p) => p.type === 'day')?.value ?? '01';
   return `${year}-${month}-${day}`;
+}
+
+// ===== Modules 6 & 7: Admin Portal & Audit DTOs =====
+
+export interface CreateUserDto {
+  universityId: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  department: string;
+  sectionIds?: string[];
+}
+
+export interface UpdateUserDto {
+  fullName?: string;
+  role?: UserRole;
+  department?: string;
+  active?: boolean;
+  sectionIds?: string[];
+}
+
+export interface CsvImportRowDto {
+  rowNumber: number;
+  universityId: string;
+  email: string;
+  fullName: string;
+  role: string;
+  department: string;
+  errors: string[];
+}
+
+export interface BulkCsvImportResultDto {
+  importedCount: number;
+  skippedCount: number;
+  createdUsers: UserProfileDto[];
+  rowErrors: Array<{ rowNumber: number; error: string }>;
+}
+
+export interface SemesterDto {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  publishedShiftsCount: number;
+}
+
+export interface CreateSemesterDto {
+  name: string;
+  startDate: string;
+  endDate: string;
+  isActive?: boolean;
+}
+
+export interface SectionDto {
+  id: string;
+  code: string;
+  name: string;
+  location: string;
+  oicUserId: string | null;
+  oicName: string | null;
+  memberCount: number;
+  active: boolean;
+}
+
+export interface CreateSectionDto {
+  code: string;
+  name: string;
+  location: string;
+  oicUserId?: string | null;
+}
+
+export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+
+export interface ScheduleTemplateDto {
+  id: string;
+  semesterId: string;
+  sectionId: string;
+  sectionName: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+  slotsRequired: number;
+  assignedStudentNames: string[];
+}
+
+export interface CreateScheduleTemplateDto {
+  semesterId: string;
+  sectionId: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+  slotsRequired: number;
+}
+
+export interface PublishScheduleResultDto {
+  semesterId: string;
+  generatedShiftsCount: number;
+  publishedAt: string;
+}
+
+export interface HourCapDto {
+  semesterId: string;
+  weeklyMaxHours: number;
+  semesterRequiredHours: number;
+  semesterMaxHours: number;
+  updatedAt: string;
+}
+
+export interface DecideRequestDto {
+  requestKind: 'swap' | 'leave';
+  decision: 'approved' | 'rejected';
+  remarks?: string;
+}
+
+export interface SyncBatchOpSummaryDto {
+  opId: string;
+  type: SyncOpType;
+  status: 'applied' | 'duplicate' | 'rejected';
+  reason: string | null;
+}
+
+export interface SyncBatchDto {
+  id: string;
+  deviceId: string;
+  userId: string;
+  userName: string;
+  userRole: UserRole;
+  receivedAt: string;
+  appliedCount: number;
+  duplicateCount: number;
+  rejectedCount: number;
+  ops: SyncBatchOpSummaryDto[];
+}
+
+export type DiscrepancyType =
+  | 'clock_drift'
+  | 'unrostered_scan'
+  | 'invalid_signature'
+  | 'missing_timeout'
+  | 'self_action';
+
+export interface DiscrepancyDto {
+  id: string;
+  type: DiscrepancyType;
+  severity: 'low' | 'medium' | 'high';
+  studentName: string;
+  oicName: string;
+  sectionName: string;
+  occurredAt: string;
+  summary: string;
+  status: 'open' | 'resolved';
+  resolutionNotes: string | null;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+}
+
+export interface ResolveDiscrepancyDto {
+  resolutionNotes: string;
+}
+
+export interface ComplianceSectionRowDto {
+  sectionId: string;
+  sectionName: string;
+  activeStudents: number;
+  renderedHours: number;
+  targetHours: number;
+  completionPct: number;
+  openDiscrepancies: number;
+}
+
+export interface ComplianceReportDto {
+  semesterId: string;
+  semesterName: string;
+  generatedAt: string;
+  totalStudents: number;
+  totalRenderedHours: number;
+  averageCompletionPct: number;
+  pendingRequestsCount: number;
+  openDiscrepanciesCount: number;
+  attendanceBreakdown: {
+    verified: number;
+    pending: number;
+    missed: number;
+    flagged: number;
+  };
+  sections: ComplianceSectionRowDto[];
 }
