@@ -33,6 +33,7 @@ apps/mobile/android/capacitor-cordova-android-plugins/
 AGENTS.md
 .agents/
 docs/
+_local-admin/
 
 # IDE & OS
 .vscode/*

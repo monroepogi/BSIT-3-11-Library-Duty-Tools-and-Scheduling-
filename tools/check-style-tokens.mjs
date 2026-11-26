@@ -22,7 +22,8 @@ function walkFiles(dir, results = []) {
       entry === '.angular' ||
       entry === 'android' ||
       entry === '.git' ||
-      entry === 'coverage'
+      entry === 'coverage' ||
+      entry === '_local-admin'
     ) {
       continue;
     }

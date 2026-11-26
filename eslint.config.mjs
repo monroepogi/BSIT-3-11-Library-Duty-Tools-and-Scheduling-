@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/coverage/**',
       'apps/mobile/android/**',
       'tools/**/*.mjs',
+      '_local-admin/**',
     ],
   },
   {
