@@ -5,42 +5,45 @@
 <ion-content [fullscreen]="true">
   <div class="vits-page">
 
-    @if (session.offline) {
+    @if (auth.isOffline()) {
       <div class="vits-banner offline">
-        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: changes will sync later
+        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: reading cache &amp; queueing updates
       </div>
     }
 
-    @if (session.role === 'OIC') {
+    @if (auth.role() === 'OIC') {
       <p class="vits-muted">Clocked in now</p>
       <div class="vits-stack">
-        @for (c of clockedIn; track c) { <span class="vits-chip ok">{{ c }}</span> }
+        @for (c of clockedIn(); track c) { <span class="vits-chip ok">{{ c }}</span> }
       </div>
       <br />
     }
 
-    @for (t of tasks; track t.id) {
+    @for (t of tasks(); track t.id) {
       <div class="vits-card vits-stack">
         <div class="vits-row">
           <strong>{{ t.title }}</strong>
-          <span [class]="'vits-chip ' + chip(t.status)">{{ t.status }}</span>
+          <div class="vits-row">
+            @if (t.pendingSync) { <span class="vits-chip warn">Pending sync</span> }
+            <span [class]="'vits-chip ' + chip(t.status)">{{ t.status }}</span>
+          </div>
         </div>
         <div class="vits-muted">
-          {{ t.type }} | {{ t.section }}@if (session.role === 'OIC') { | {{ t.assignedTo }} }
+          {{ t.category }} | {{ t.sectionName }}@if (auth.role() === 'OIC' && t.assignedToName) { | {{ t.assignedToName }} }
         </div>
-        @if (session.role === 'STUDENT' && (t.status === 'Assigned' || t.status === 'In Progress')) {
+        @if (auth.role() === 'STUDENT' && (t.status === 'todo' || t.status === 'in_progress')) {
           <ion-button size="small" (click)="markDone(t)">Mark done</ion-button>
         }
-        @if (session.role === 'OIC' && t.status === 'Done') {
+        @if (auth.role() === 'OIC' && t.status === 'done') {
           <ion-button size="small" color="success" (click)="verify(t)">Verify</ion-button>
         }
       </div>
     } @empty {
-      <div class="vits-empty">No tasks yet.</div>
+      <div class="vits-empty">No tasks in local cache yet.</div>
     }
   </div>
 
-  @if (session.role === 'OIC') {
+  @if (auth.role() === 'OIC') {
     <ion-fab slot="fixed" vertical="bottom" horizontal="end">
       <ion-fab-button (click)="assign()"><ion-icon name="add"></ion-icon></ion-fab-button>
     </ion-fab>

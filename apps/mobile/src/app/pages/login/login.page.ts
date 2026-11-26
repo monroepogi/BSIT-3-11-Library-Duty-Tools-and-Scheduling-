@@ -1,8 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonButton, IonContent, IonIcon, IonInput, NavController } from '@ionic/angular';
-import { Role } from '../../attributes/role';
-import { SessionService } from '../../services/session/session';
+import {
+  IonButton,
+  IonContent,
+  IonIcon,
+  IonInput,
+  NavController,
+} from '@ionic/angular';
+import { AuthService } from '../../core/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -10,31 +15,37 @@ import { SessionService } from '../../services/session/session';
   standalone: true,
   imports: [FormsModule, IonContent, IonButton, IonIcon, IonInput],
 })
-export class LoginPage {
-  readonly session = inject(SessionService);
+export class LoginPage implements OnInit {
+  readonly auth = inject(AuthService);
   private readonly nav = inject(NavController);
 
   email = '';
   password = '';
-  signingIn = false;
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
 
-  signInAs(role: Role) {
-    this.session.signIn(role);
-    this.nav.navigateRoot(role === 'STUDENT' ? '/student/home' : '/oic/home');
+  async ngOnInit(): Promise<void> {
+    await this.auth.ensureInitialized();
+    if (this.auth.locked()) {
+      await this.nav.navigateRoot('/unlock');
+      return;
+    }
+    if (this.auth.isAuthenticated()) {
+      await this.nav.navigateRoot(this.auth.homeUrl());
+    }
   }
 
-  async signInWithEmail() {
+  async signIn(): Promise<void> {
     if (!this.email.trim() || !this.password) return;
-    this.signingIn = true;
+    this.loading.set(true);
+    this.error.set(null);
     try {
-      const result = await this.session.signInWithSupabase(this.email.trim(), this.password);
-      if (!result.ok) {
-        await this.session.notify(result.error ?? 'Sign-in failed.');
-        return;
-      }
-      this.nav.navigateRoot(this.session.homeUrl());
+      const user = await this.auth.login(this.email, this.password);
+      await this.nav.navigateRoot(user.role === 'oic' ? '/oic/home' : '/student/home');
+    } catch (err) {
+      this.error.set(this.auth.extractErrorMessage(err));
     } finally {
-      this.signingIn = false;
+      this.loading.set(false);
     }
   }
 }

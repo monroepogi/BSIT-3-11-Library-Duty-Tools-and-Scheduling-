@@ -4,47 +4,35 @@
     <h1 class="vits-heading">VITS</h1>
     <p class="vits-muted">Library duty scheduling and attendance</p>
 
-    @if (session.isSupabaseConfigured) {
-      <div class="vits-card vits-stack">
-        <ion-input
-          label="University email"
-          label-placement="floating"
-          fill="outline"
-          type="email"
-          [(ngModel)]="email"
-        ></ion-input>
-        <ion-input
-          label="Password"
-          label-placement="floating"
-          fill="outline"
-          type="password"
-          [(ngModel)]="password"
-        ></ion-input>
-        <ion-button
-          expand="block"
-          [disabled]="signingIn || !email.trim() || !password"
-          (click)="signInWithEmail()"
-        >
-          {{ signingIn ? 'Signing in...' : 'Sign in with Supabase' }}
-        </ion-button>
-      </div>
+    @if (auth.sessionMessage()) {
+      <div class="vits-banner offline" role="status">{{ auth.sessionMessage() }}</div>
     }
 
-    <ion-button expand="block" size="large" (click)="signInAs('STUDENT')">
-      <ion-icon slot="start" name="school-outline"></ion-icon>
-      Sign in as Student
-    </ion-button>
-    <ion-button expand="block" size="large" fill="outline" (click)="signInAs('OIC')">
-      <ion-icon slot="start" name="shield-checkmark-outline"></ion-icon>
-      Sign in as OIC
-    </ion-button>
+    @if (error()) {
+      <div class="vits-banner bad" role="alert">{{ error() }}</div>
+    }
 
-    <p class="vits-muted">
-      {{
-        session.isSupabaseConfigured
-          ? 'Supabase database connected. Quick role sign-in uses demo profiles.'
-          : 'Demo mode active. Add Supabase credentials in environment.ts to enable live DB.'
-      }}
-    </p>
+    <ion-input
+      label="University Email"
+      label-placement="floating"
+      fill="outline"
+      type="email"
+      [(ngModel)]="email"
+      placeholder="student@university.edu"
+    ></ion-input>
+
+    <ion-input
+      label="Password"
+      label-placement="floating"
+      fill="outline"
+      type="password"
+      [(ngModel)]="password"
+      (keyup.enter)="signIn()"
+    ></ion-input>
+
+    <ion-button expand="block" size="large" [disabled]="loading() || !email.trim() || !password" (click)="signIn()">
+      <ion-icon slot="start" name="shield-checkmark-outline"></ion-icon>
+      {{ loading() ? 'Signing in...' : 'Sign in' }}
+    </ion-button>
   </div>
 </ion-content>

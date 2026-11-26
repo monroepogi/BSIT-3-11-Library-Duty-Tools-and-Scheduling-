@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>{{ session.role === 'OIC' ? 'Endorsement Inbox' : 'My Requests' }}</ion-title>
+    <ion-title>{{ auth.role() === 'OIC' ? 'Endorsement Inbox' : 'My Requests' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -15,7 +15,7 @@
         </div>
         <div class="vits-muted">{{ r.shiftLabel }}</div>
         <div class="vits-muted">"{{ r.reason }}" | {{ r.submittedOn }}</div>
-        @if (session.role === 'OIC') {
+        @if (auth.role() === 'OIC') {
           <div class="vits-muted">From: {{ r.requester }}</div>
         }
 
@@ -25,7 +25,7 @@
           }
         </div>
 
-        @if (session.role === 'OIC' && r.status === 'Pending OIC') {
+        @if (auth.role() === 'OIC' && r.status === 'Pending OIC') {
           <div class="vits-row">
             <ion-button size="small" fill="outline" color="danger" (click)="decline(r)">Decline</ion-button>
             <ion-button size="small" (click)="endorse(r)">Endorse</ion-button>
@@ -37,7 +37,7 @@
     }
   </div>
 
-  @if (session.role === 'STUDENT') {
+  @if (auth.role() === 'STUDENT') {
     <ion-fab slot="fixed" vertical="bottom" horizontal="end">
       <ion-fab-button (click)="newRequest()"><ion-icon name="add"></ion-icon></ion-fab-button>
     </ion-fab>

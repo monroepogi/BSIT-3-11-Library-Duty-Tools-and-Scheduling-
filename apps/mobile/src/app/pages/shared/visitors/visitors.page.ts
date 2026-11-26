@@ -1,24 +1,24 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader,
-  IonToolbar,
-  IonButtons,
   IonBackButton,
-  IonTitle,
-  IonContent,
-  IonSegment,
-  IonSegmentButton,
-  IonLabel,
   IonButton,
+  IonButtons,
+  IonContent,
   IonFab,
   IonFabButton,
+  IonHeader,
   IonIcon,
+  IonLabel,
+  IonSegment,
+  IonSegmentButton,
+  IonTitle,
+  IonToolbar,
   NavController,
 } from '@ionic/angular';
 import { VisitorEntry } from '../../../attributes/visitor-entry';
-import { LibraryDatabaseService } from '../../../services/database/library-database.service';
-import { SessionService } from '../../../services/session/session';
+import { AuthService } from '../../../core/auth.service';
+import { MockDataService } from '../../../services/mock-data/mock-data';
 
 @Component({
   selector: 'app-visitors',
@@ -42,23 +42,24 @@ import { SessionService } from '../../../services/session/session';
   ],
 })
 export class VisitorsPage implements OnInit {
-  readonly session = inject(SessionService);
-  private readonly db = inject(LibraryDatabaseService);
+  readonly auth = inject(AuthService);
+  private readonly data = inject(MockDataService);
   private readonly nav = inject(NavController);
   private readonly cdr = inject(ChangeDetectorRef);
 
   entries: VisitorEntry[] = [];
   filter = 'All';
 
-  ngOnInit() {
-    this.load();
-  }
-  ionViewWillEnter() {
-    this.load();
+  ngOnInit(): void {
+    void this.load();
   }
 
-  async load() {
-    this.entries = await this.db.getVisitors();
+  ionViewWillEnter(): void {
+    void this.load();
+  }
+
+  async load(): Promise<void> {
+    this.entries = await this.data.getVisitors();
     this.cdr.detectChanges();
   }
 
@@ -70,14 +71,13 @@ export class VisitorsPage implements OnInit {
     return this.entries.filter((e) => e.kind === kind).length;
   }
 
-  async markReturned(e: VisitorEntry) {
+  async markReturned(e: VisitorEntry): Promise<void> {
     e.returned = true;
-    await this.db.markPaperReturned(e.id);
-    await this.session.record('Paper marked as returned');
+    await this.auth.notify('Paper marked as returned (Phase 6 mock)');
     this.cdr.detectChanges();
   }
 
-  add() {
-    this.nav.navigateForward('/visitor-new');
+  add(): void {
+    void this.nav.navigateForward('/visitor-new');
   }
 }

@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-buttons slot="start"><ion-back-button></ion-back-button></ion-buttons>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/"></ion-back-button></ion-buttons>
     <ion-title>Profile</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -10,23 +10,45 @@
 
     <div class="vits-card vits-stack vits-center-text">
       <div class="vits-logo"><ion-icon name="person-outline"></ion-icon></div>
-      <h2 class="vits-heading">{{ session.userName }}</h2>
-      <div><span class="vits-chip info">{{ session.role === 'OIC' ? 'Officer-in-Charge' : 'Student' }}</span></div>
+      <h2 class="vits-heading">{{ auth.userName() }}</h2>
+      <div class="vits-muted">{{ auth.currentUser()?.email }} • {{ auth.currentUser()?.universityId }}</div>
+      <div><span class="vits-chip info">{{ auth.role() === 'OIC' ? 'Officer-in-Charge' : 'Student' }}</span></div>
+    </div>
+
+    <div class="vits-card vits-stack">
+      <strong>Offline PIN &amp; Lock</strong>
+      <div class="vits-muted">
+        {{ auth.hasPinConfigured() ? 'Offline PIN configured.' : 'Set a 4–6 digit PIN to unlock offline.' }}
+      </div>
+      <ion-input
+        label="Set / Update 4–6 digit PIN"
+        label-placement="floating"
+        fill="outline"
+        type="password"
+        inputmode="numeric"
+        [(ngModel)]="pinInput"
+      ></ion-input>
+      <div class="vits-row">
+        <ion-button size="small" [disabled]="pinInput.trim().length < 4" (click)="savePin()">Save PIN</ion-button>
+        <ion-button size="small" fill="outline" (click)="lockNow()">Lock Session</ion-button>
+      </div>
     </div>
 
     <div class="vits-card vits-stack">
       <div class="vits-row">
-        <strong>Supabase Database</strong>
-        <span [class]="'vits-chip ' + dbChipClass">{{ dbStatusLabel }}</span>
+        <strong>Sync &amp; Dev Network Toggle</strong>
+        <span class="vits-chip" [class.ok]="!auth.isOffline()" [class.warn]="auth.isOffline()">
+          {{ auth.isOffline() ? 'Offline' : 'Online' }}
+        </span>
       </div>
-      <ion-button size="small" fill="outline" (click)="checkDatabase()">Test DB connection</ion-button>
-    </div>
-
-    <div class="vits-card vits-stack">
-      <strong>Developer panel</strong>
-      <ion-toggle [checked]="session.offline" (ionChange)="toggleOffline($event)">Simulate offline</ion-toggle>
-      <div class="vits-muted">Pending sync: {{ session.pendingSync }}</div>
-      <ion-button size="small" fill="outline" color="warning" (click)="expireSession()">Simulate session expiry</ion-button>
+      <ion-toggle [checked]="chaos.forcedOffline()" (ionChange)="toggleOffline($event)">Simulate offline (Phase 6 teardown)</ion-toggle>
+      <div class="vits-muted">Pending outbox ops: {{ sync.pendingCount() }}</div>
+      @if (sync.failedOps().length > 0) {
+        <div class="vits-banner bad">{{ sync.failedOps()[0].label }}: {{ sync.failedOps()[0].lastError }}</div>
+      }
+      <ion-button size="small" fill="outline" [disabled]="sync.syncing() || auth.isOffline()" (click)="syncNow()">
+        {{ sync.syncing() ? 'Syncing...' : 'Sync Now' }}
+      </ion-button>
     </div>
 
     <ion-button expand="block" color="danger" fill="outline" (click)="signOut()">

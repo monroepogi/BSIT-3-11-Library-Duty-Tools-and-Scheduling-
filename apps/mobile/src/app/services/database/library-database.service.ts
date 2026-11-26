@@ -7,10 +7,28 @@ import {
   type VisitorEntryRow,
 } from '@vits/shared-network';
 import { DutyRequest } from '../../attributes/duty-request';
-import { Shift } from '../../attributes/shift';
-import { Task } from '../../attributes/task';
 import { VisitorEntry } from '../../attributes/visitor-entry';
-import { MockDataService } from '../mock-data/mock-data';
+
+export interface Shift {
+  id: number;
+  day: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  section: string;
+  oic: string;
+  student: string;
+  status: 'Scheduled' | 'Completed' | 'Missed';
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  type: 'Shelving' | 'Circulation' | 'Inventory';
+  section: string;
+  assignedTo: string;
+  status: 'Assigned' | 'In Progress' | 'Done' | 'Verified';
+}
 
 type PendingMutation = () => Promise<void>;
 
@@ -65,10 +83,43 @@ function mapVisitorRow(row: VisitorEntryRow): VisitorEntry {
 @Injectable({ providedIn: 'root' })
 export class LibraryDatabaseService {
   private readonly supabase = inject(SupabaseService);
-  private readonly fallback = inject(MockDataService);
 
   private offline = false;
   private pendingMutations: PendingMutation[] = [];
+
+  private localShifts: Shift[] = [
+    { id: 1, day: 'Mon', date: 'Oct 26', startTime: '08:00', endTime: '12:00', section: 'Circulation', oic: 'Ms. Reyes', student: 'Juan Dela Cruz', status: 'Completed' },
+    { id: 2, day: 'Tue', date: 'Oct 27', startTime: '13:00', endTime: '17:00', section: 'Periodicals', oic: 'Ms. Reyes', student: 'Maria Santos', status: 'Completed' },
+    { id: 3, day: 'Wed', date: 'Oct 28', startTime: '09:00', endTime: '13:00', section: 'Circulation', oic: 'Ms. Reyes', student: 'Juan Dela Cruz', status: 'Scheduled' },
+    { id: 4, day: 'Wed', date: 'Oct 28', startTime: '13:00', endTime: '17:00', section: 'Reference', oic: 'Ms. Reyes', student: 'Maria Santos', status: 'Scheduled' },
+    { id: 5, day: 'Thu', date: 'Oct 29', startTime: '08:00', endTime: '12:00', section: 'Reference', oic: 'Ms. Reyes', student: 'Juan Dela Cruz', status: 'Scheduled' },
+    { id: 6, day: 'Fri', date: 'Oct 30', startTime: '10:00', endTime: '14:00', section: 'Circulation', oic: 'Ms. Reyes', student: 'Paolo Lim', status: 'Scheduled' },
+  ];
+
+  private localTasks: Task[] = [
+    { id: 1, title: 'Shelve returned books (300s)', type: 'Shelving', section: 'Circulation', assignedTo: 'Juan Dela Cruz', status: 'In Progress' },
+    { id: 2, title: 'Process overdue notices', type: 'Circulation', section: 'Circulation', assignedTo: 'Juan Dela Cruz', status: 'Assigned' },
+    { id: 3, title: 'Inventory of periodicals shelf B', type: 'Inventory', section: 'Periodicals', assignedTo: 'Maria Santos', status: 'Done' },
+    { id: 4, title: 'Reference desk assistance', type: 'Circulation', section: 'Reference', assignedTo: 'Paolo Lim', status: 'Assigned' },
+  ];
+
+  private localRequests: DutyRequest[] = [
+    { id: 1, kind: 'Swap', shiftLabel: 'Thu Oct 29, 08:00-12:00', reason: 'Class conflict', requester: 'Juan Dela Cruz', submittedOn: 'Oct 27', status: 'Pending OIC' },
+    { id: 2, kind: 'Leave', shiftLabel: 'Mon Oct 26, 08:00-12:00', reason: 'Medical appointment', requester: 'Juan Dela Cruz', submittedOn: 'Oct 24', status: 'Approved' },
+    { id: 3, kind: 'Swap', shiftLabel: 'Wed Oct 28, 13:00-17:00', reason: 'Exam review', requester: 'Maria Santos', submittedOn: 'Oct 27', status: 'Pending OIC' },
+    { id: 4, kind: 'Leave', shiftLabel: 'Fri Oct 30, 10:00-14:00', reason: 'Family event', requester: 'Paolo Lim', submittedOn: 'Oct 26', status: 'Endorsed' },
+  ];
+
+  private localVisitors: VisitorEntry[] = [
+    { id: 1, name: 'Dr. Alvarez', kind: 'Visitor', detail: 'Faculty, Reference section', time: '09:10' },
+    { id: 2, name: 'Kim Dizon', kind: 'Baggage', detail: 'Locker 12, black backpack', time: '09:25' },
+    { id: 3, name: 'Ana Cruz', kind: 'Paper', detail: 'Thesis: Coastal Erosion Study (2019), ID 2021-0457', time: '10:05', returned: false },
+    { id: 4, name: 'Leo Tan', kind: 'Paper', detail: 'Journal: Marine Ecology Vol. 12, ID 2020-0112', time: '10:40', returned: true },
+  ];
+
+  private localStudents = ['Juan Dela Cruz', 'Maria Santos', 'Paolo Lim'];
+  private localClockedIn = new Set<string>(['Maria Santos', 'Paolo Lim']);
+  private readonly defaultHours = { done: 24, required: 60 };
 
   get isRemoteActive(): boolean {
     return this.supabase.isConfigured && !this.offline;
@@ -112,7 +163,7 @@ export class LibraryDatabaseService {
 
   async getShifts(): Promise<Shift[]> {
     if (!this.isRemoteActive) {
-      return this.fallback.getShifts();
+      return [...this.localShifts];
     }
     try {
       const { data, error } = await this.supabase
@@ -121,16 +172,16 @@ export class LibraryDatabaseService {
         .order('id', { ascending: true });
       if (error || !data) throw error ?? new Error('Failed to load shifts');
       const mapped = data.map(mapShiftRow);
-      this.fallback.replaceShifts(mapped);
+      this.localShifts = mapped;
       return mapped;
     } catch {
-      return this.fallback.getShifts();
+      return [...this.localShifts];
     }
   }
 
   async getShiftById(id: number): Promise<Shift | undefined> {
     if (!this.isRemoteActive) {
-      return this.fallback.getShiftById(id);
+      return this.localShifts.find((s) => s.id === id);
     }
     try {
       const { data, error } = await this.supabase
@@ -141,13 +192,13 @@ export class LibraryDatabaseService {
       if (error) throw error;
       return data ? mapShiftRow(data) : undefined;
     } catch {
-      return this.fallback.getShiftById(id);
+      return this.localShifts.find((s) => s.id === id);
     }
   }
 
   async getTasks(): Promise<Task[]> {
     if (!this.isRemoteActive) {
-      return this.fallback.getTasks();
+      return [...this.localTasks];
     }
     try {
       const { data, error } = await this.supabase
@@ -156,16 +207,16 @@ export class LibraryDatabaseService {
         .order('id', { ascending: false });
       if (error || !data) throw error ?? new Error('Failed to load tasks');
       const mapped = data.map(mapTaskRow);
-      this.fallback.replaceTasks(mapped);
+      this.localTasks = mapped;
       return mapped;
     } catch {
-      return this.fallback.getTasks();
+      return [...this.localTasks];
     }
   }
 
   async addTask(input: Omit<Task, 'id'>, createdBy?: string): Promise<Task> {
     const localTask: Task = { id: Date.now(), ...input };
-    this.fallback.addTask(localTask);
+    this.localTasks = [localTask, ...this.localTasks];
 
     const persist = async () => {
       const { data, error } = await this.supabase
@@ -191,7 +242,7 @@ export class LibraryDatabaseService {
   }
 
   async updateTaskStatus(id: number, status: Task['status']): Promise<void> {
-    this.fallback.updateTaskStatus(id, status);
+    this.localTasks = this.localTasks.map((t) => (t.id === id ? { ...t, status } : t));
 
     const persist = async () => {
       const nowIso = new Date().toISOString();
@@ -211,7 +262,7 @@ export class LibraryDatabaseService {
 
   async getRequests(): Promise<DutyRequest[]> {
     if (!this.isRemoteActive) {
-      return this.fallback.getRequests();
+      return [...this.localRequests];
     }
     try {
       const { data, error } = await this.supabase
@@ -220,10 +271,10 @@ export class LibraryDatabaseService {
         .order('id', { ascending: false });
       if (error || !data) throw error ?? new Error('Failed to load duty requests');
       const mapped = data.map(mapRequestRow);
-      this.fallback.replaceRequests(mapped);
+      this.localRequests = mapped;
       return mapped;
     } catch {
-      return this.fallback.getRequests();
+      return [...this.localRequests];
     }
   }
 
@@ -232,7 +283,7 @@ export class LibraryDatabaseService {
     options?: { shiftId?: number; attachmentName?: string },
   ): Promise<DutyRequest> {
     const localRequest: DutyRequest = { id: Date.now(), ...input };
-    this.fallback.addRequest(localRequest);
+    this.localRequests = [localRequest, ...this.localRequests];
 
     const persist = async () => {
       const { data, error } = await this.supabase
@@ -264,7 +315,7 @@ export class LibraryDatabaseService {
     status: DutyRequest['status'],
     endorsedBy?: string,
   ): Promise<void> {
-    this.fallback.updateRequestStatus(id, status);
+    this.localRequests = this.localRequests.map((r) => (r.id === id ? { ...r, status } : r));
 
     const persist = async () => {
       const { error } = await this.supabase
@@ -287,7 +338,7 @@ export class LibraryDatabaseService {
 
   async getVisitors(): Promise<VisitorEntry[]> {
     if (!this.isRemoteActive) {
-      return this.fallback.getVisitors();
+      return [...this.localVisitors];
     }
     try {
       const { data, error } = await this.supabase
@@ -297,10 +348,10 @@ export class LibraryDatabaseService {
         .order('id', { ascending: false });
       if (error || !data) throw error ?? new Error('Failed to load visitor entries');
       const mapped = data.map(mapVisitorRow);
-      this.fallback.replaceVisitors(mapped);
+      this.localVisitors = mapped;
       return mapped;
     } catch {
-      return this.fallback.getVisitors();
+      return [...this.localVisitors];
     }
   }
 
@@ -309,7 +360,7 @@ export class LibraryDatabaseService {
     recordedBy?: string,
   ): Promise<VisitorEntry> {
     const localEntry: VisitorEntry = { id: Date.now(), ...input };
-    this.fallback.addVisitor(localEntry);
+    this.localVisitors = [localEntry, ...this.localVisitors];
 
     const persist = async () => {
       const { data, error } = await this.supabase
@@ -335,7 +386,9 @@ export class LibraryDatabaseService {
   }
 
   async markPaperReturned(id: number): Promise<void> {
-    this.fallback.markPaperReturned(id);
+    this.localVisitors = this.localVisitors.map((v) =>
+      v.id === id ? { ...v, returned: true } : v,
+    );
 
     const persist = async () => {
       const { error } = await this.supabase
@@ -350,7 +403,7 @@ export class LibraryDatabaseService {
 
   async getStudents(): Promise<string[]> {
     if (!this.isRemoteActive) {
-      return this.fallback.getStudents();
+      return [...this.localStudents];
     }
     try {
       const { data, error } = await this.supabase
@@ -361,16 +414,16 @@ export class LibraryDatabaseService {
         .order('full_name', { ascending: true });
       if (error || !data) throw error ?? new Error('Failed to load students');
       const names = data.map((row) => row.full_name);
-      this.fallback.replaceStudents(names);
+      this.localStudents = names;
       return names;
     } catch {
-      return this.fallback.getStudents();
+      return [...this.localStudents];
     }
   }
 
   async getStudentHours(studentName: string): Promise<{ done: number; required: number }> {
     if (!this.isRemoteActive) {
-      return this.fallback.hours;
+      return this.defaultHours;
     }
     try {
       const { data, error } = await this.supabase
@@ -378,19 +431,19 @@ export class LibraryDatabaseService {
         .select('done_hours, required_hours')
         .eq('full_name', studentName)
         .maybeSingle();
-      if (error || !data) return this.fallback.hours;
+      if (error || !data) return this.defaultHours;
       return {
         done: Number(data.done_hours),
         required: data.required_hours,
       };
     } catch {
-      return this.fallback.hours;
+      return this.defaultHours;
     }
   }
 
   async getClockedIn(): Promise<string[]> {
     if (!this.isRemoteActive) {
-      return this.fallback.getClockedIn();
+      return Array.from(this.localClockedIn);
     }
     try {
       const { data, error } = await this.supabase
@@ -400,24 +453,30 @@ export class LibraryDatabaseService {
         .order('clocked_in_at', { ascending: false });
       if (error || !data) throw error ?? new Error('Failed to load active attendance');
       const names = data.map((row) => row.student_name);
-      this.fallback.replaceClockedIn(names);
+      this.localClockedIn = new Set(names);
       return names;
     } catch {
-      return this.fallback.getClockedIn();
+      return Array.from(this.localClockedIn);
     }
   }
 
   async isClockedIn(student: string): Promise<boolean> {
     if (!this.isRemoteActive) {
-      return this.fallback.isClockedIn(student);
+      return this.localClockedIn.has(student);
     }
     const active = await this.getClockedIn();
     return active.includes(student);
   }
 
   async clockIn(student: string, scannedBy?: string): Promise<'ok' | 'already_in'> {
+    const localClockIn = (): 'ok' | 'already_in' => {
+      if (this.localClockedIn.has(student)) return 'already_in';
+      this.localClockedIn.add(student);
+      return 'ok';
+    };
+
     if (!this.isRemoteActive) {
-      const result = this.fallback.clockIn(student);
+      const result = localClockIn();
       if (result === 'ok' && this.supabase.isConfigured) {
         this.pendingMutations.push(async () => {
           await this.supabase.rpc('clock_in_student', {
@@ -437,11 +496,11 @@ export class LibraryDatabaseService {
       if (error) throw error;
       const result = data === 'already_in' ? 'already_in' : 'ok';
       if (result === 'ok') {
-        this.fallback.clockIn(student);
+        this.localClockedIn.add(student);
       }
       return result;
     } catch {
-      const result = this.fallback.clockIn(student);
+      const result = localClockIn();
       if (result === 'ok') {
         this.pendingMutations.push(async () => {
           await this.supabase.rpc('clock_in_student', {
@@ -455,8 +514,14 @@ export class LibraryDatabaseService {
   }
 
   async clockOut(student: string): Promise<'ok' | 'not_in'> {
+    const localClockOut = (): 'ok' | 'not_in' => {
+      if (!this.localClockedIn.has(student)) return 'not_in';
+      this.localClockedIn.delete(student);
+      return 'ok';
+    };
+
     if (!this.isRemoteActive) {
-      const result = this.fallback.clockOut(student);
+      const result = localClockOut();
       if (result === 'ok' && this.supabase.isConfigured) {
         this.pendingMutations.push(async () => {
           await this.supabase.rpc('clock_out_student', { p_student_name: student });
@@ -472,11 +537,11 @@ export class LibraryDatabaseService {
       if (error) throw error;
       const result = data === 'not_in' ? 'not_in' : 'ok';
       if (result === 'ok') {
-        this.fallback.clockOut(student);
+        this.localClockedIn.delete(student);
       }
       return result;
     } catch {
-      const result = this.fallback.clockOut(student);
+      const result = localClockOut();
       if (result === 'ok') {
         this.pendingMutations.push(async () => {
           await this.supabase.rpc('clock_out_student', { p_student_name: student });

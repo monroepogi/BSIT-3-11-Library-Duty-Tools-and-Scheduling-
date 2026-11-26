@@ -1,18 +1,18 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
-  IonHeader,
-  IonToolbar,
-  IonButtons,
   IonBackButton,
-  IonTitle,
-  IonContent,
   IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
   NavController,
 } from '@ionic/angular';
-import { ActivatedRoute } from '@angular/router';
-import { Shift } from '../../../attributes/shift';
-import { LibraryDatabaseService } from '../../../services/database/library-database.service';
-import { SessionService } from '../../../services/session/session';
+import { AuthService } from '../../../core/auth.service';
+import { OutboxRepository, ShiftsRepository } from '../../../core/db/repositories';
+import { SyncService } from '../../../core/sync/sync.service';
 
 @Component({
   selector: 'app-shift-detail',
@@ -20,28 +20,38 @@ import { SessionService } from '../../../services/session/session';
   standalone: true,
   imports: [IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, IonButton],
 })
-export class ShiftDetailPage implements OnInit {
-  readonly session = inject(SessionService);
+export class ShiftDetailPage {
+  readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
-  private readonly db = inject(LibraryDatabaseService);
+  private readonly shiftsRepo = inject(ShiftsRepository);
+  private readonly outbox = inject(OutboxRepository);
+  private readonly sync = inject(SyncService);
   private readonly nav = inject(NavController);
-  private readonly cdr = inject(ChangeDetectorRef);
 
-  shift?: Shift;
+  private readonly shiftId = signal('');
+  readonly shift = computed(() => this.shiftsRepo.getById(this.shiftId()));
 
-  ngOnInit() {
-    this.route.params.subscribe((p) => this.load(Number(p['id'])));
-  }
-  ionViewWillEnter() {
-    this.load(Number(this.route.snapshot.paramMap.get('id')));
+  constructor() {
+    this.route.paramMap.subscribe((p) => this.shiftId.set(p.get('id') ?? ''));
   }
 
-  async load(id: number) {
-    this.shift = await this.db.getShiftById(id);
-    this.cdr.detectChanges();
+  requestChange(): void {
+    void this.nav.navigateForward('/request-new');
   }
 
-  requestChange() {
-    this.nav.navigateForward('/request-new');
+  async signoffShift(): Promise<void> {
+    const s = this.shift();
+    const user = this.auth.currentUser();
+    if (!s || !user) return;
+    await this.shiftsRepo.applyLocalSignoff(s.id, user.fullName, 'Signed off by OIC.');
+    await this.outbox.enqueue({
+      entityType: 'shift',
+      entityId: s.id,
+      type: 'shift.signoff',
+      label: `Sign off shift (${s.userFullName})`,
+      payload: { remarks: 'Signed off by OIC.' },
+    });
+    await this.auth.notify(this.auth.isOffline() ? 'Sign-off queued offline' : 'Shift signed off');
+    this.sync.scheduleDebouncedSync(100);
   }
 }

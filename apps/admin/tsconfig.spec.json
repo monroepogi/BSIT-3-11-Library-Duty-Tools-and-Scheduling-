@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc/admin-spec",
+    "types": ["vitest/globals", "node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../libs/shared-types/src/**/*.ts",
+    "../../libs/shared-types/fixtures/**/*.ts",
+    "../../libs/shared-ui/src/**/*.ts",
+    "../../libs/shared-network/src/**/*.ts"
+  ]
+}

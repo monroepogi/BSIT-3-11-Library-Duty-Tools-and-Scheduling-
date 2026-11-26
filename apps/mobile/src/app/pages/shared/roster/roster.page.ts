@@ -1,8 +1,15 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, NavController } from '@ionic/angular';
-import { Shift } from '../../../attributes/shift';
-import { LibraryDatabaseService } from '../../../services/database/library-database.service';
-import { SessionService } from '../../../services/session/session';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { IonContent, IonHeader, IonIcon, IonTitle, IonToolbar, NavController } from '@ionic/angular';
+import { getLibraryDateString } from '@vits/shared-types';
+import { AuthService } from '../../../core/auth.service';
+import { ShiftsRepository } from '../../../core/db/repositories';
+import { SyncService } from '../../../core/sync/sync.service';
+
+interface DayTab {
+  label: string;
+  dateStr: string;
+  dayNum: string;
+}
 
 @Component({
   selector: 'app-roster',
@@ -11,51 +18,65 @@ import { SessionService } from '../../../services/session/session';
   imports: [IonHeader, IonToolbar, IonTitle, IonContent, IonIcon],
 })
 export class RosterPage implements OnInit {
-  readonly session = inject(SessionService);
-  private readonly db = inject(LibraryDatabaseService);
+  readonly auth = inject(AuthService);
+  private readonly shiftsRepo = inject(ShiftsRepository);
+  private readonly sync = inject(SyncService);
   private readonly nav = inject(NavController);
-  private readonly cdr = inject(ChangeDetectorRef);
 
-  days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  dates: Record<string, string> = {
-    Mon: '26',
-    Tue: '27',
-    Wed: '28',
-    Thu: '29',
-    Fri: '30',
-    Sat: '31',
-    Sun: '1',
-  };
-  selectedDay = 'Wed';
-  shifts: Shift[] = [];
+  readonly days: DayTab[] = [-2, -1, 0, 1, 2, 3, 4].map((offset) => {
+    const d = new Date(Date.now() + offset * 86_400_000);
+    const dateStr = getLibraryDateString(d, 'Asia/Manila');
+    const label = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Manila',
+      weekday: 'short',
+    }).format(d);
+    return { label, dateStr, dayNum: dateStr.slice(8, 10) };
+  });
 
-  ngOnInit() {
-    this.load();
-  }
-  ionViewWillEnter() {
-    this.load();
-  }
+  readonly selectedDate = signal(getLibraryDateString(new Date(), 'Asia/Manila'));
 
-  async load() {
-    const all = await this.db.getShifts();
-    // OIC sees the whole section, student sees only own shifts
-    this.shifts =
-      this.session.role === 'OIC' ? all : all.filter((s) => s.student === this.session.userName);
-    this.cdr.detectChanges();
+  readonly visibleShifts = computed(() => {
+    const user = this.auth.currentUser();
+    const all = this.shiftsRepo.shifts();
+    return this.auth.role() === 'OIC' ? all : all.filter((s) => s.userId === user?.id);
+  });
+
+  readonly dayShifts = computed(() =>
+    this.visibleShifts().filter((s) => s.shiftDate === this.selectedDate()),
+  );
+
+  ngOnInit(): void {
+    void this.auth.ensureInitialized();
   }
 
-  hasShift(day: string): boolean {
-    return this.shifts.some((s) => s.day === day);
+  ionViewWillEnter(): void {
+    void this.sync.syncNow().catch(() => undefined);
   }
-  get dayShifts(): Shift[] {
-    return this.shifts.filter((s) => s.day === this.selectedDay);
+
+  hasShift(dateStr: string): boolean {
+    return this.visibleShifts().some((s) => s.shiftDate === dateStr);
+  }
+
+  timeLabel(iso: string): string {
+    return new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Manila',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date(iso));
   }
 
   chip(status: string): string {
-    return status === 'Completed' ? 'ok' : status === 'Missed' ? 'bad' : 'info';
+    return status === 'completed'
+      ? 'ok'
+      : status === 'missed'
+        ? 'bad'
+        : status === 'in_progress'
+          ? 'warn'
+          : 'info';
   }
 
-  open(id: number) {
-    this.nav.navigateForward('/shift/' + id);
+  open(id: string): void {
+    void this.nav.navigateForward('/shift/' + id);
   }
 }

@@ -1,4 +1,5 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   IonBackButton,
   IonButton,
@@ -6,19 +7,22 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
+  IonInput,
   IonTitle,
   IonToggle,
   IonToolbar,
-  NavController,
 } from '@ionic/angular';
-import { LibraryDatabaseService } from '../../../services/database/library-database.service';
-import { SessionService } from '../../../services/session/session';
+import { MockChaosService } from '@vits/shared-network';
+import { AuthService } from '../../../core/auth.service';
+import { OutboxRepository } from '../../../core/db/repositories';
+import { SyncService } from '../../../core/sync/sync.service';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.page.html',
   standalone: true,
   imports: [
+    FormsModule,
     IonHeader,
     IonToolbar,
     IonButtons,
@@ -26,54 +30,42 @@ import { SessionService } from '../../../services/session/session';
     IonTitle,
     IonContent,
     IonIcon,
+    IonInput,
     IonToggle,
     IonButton,
   ],
 })
-export class ProfilePage implements OnInit {
-  readonly session = inject(SessionService);
-  private readonly db = inject(LibraryDatabaseService);
-  private readonly nav = inject(NavController);
-  private readonly cdr = inject(ChangeDetectorRef);
+export class ProfilePage {
+  readonly auth = inject(AuthService);
+  readonly sync = inject(SyncService);
+  readonly outbox = inject(OutboxRepository);
+  readonly chaos = inject(MockChaosService);
 
-  dbStatusLabel = 'Local fallback (Supabase not configured)';
-  dbChipClass = 'warn';
+  pinInput = '';
 
-  ngOnInit() {
-    void this.checkDatabase();
-  }
-
-  async checkDatabase() {
-    if (!this.db.isConfigured) {
-      this.dbStatusLabel = 'Local fallback (configure environment.ts)';
-      this.dbChipClass = 'warn';
-      this.cdr.detectChanges();
-      return;
+  toggleOffline(ev: Event): void {
+    const offline = Boolean((ev as CustomEvent).detail.checked);
+    this.chaos.forcedOffline.set(offline);
+    if (!offline) {
+      void this.sync.syncNow().catch(() => undefined);
     }
-
-    const health = await this.db.checkConnection();
-    if (health.ok) {
-      this.dbStatusLabel = `Connected (${health.latencyMs}ms)`;
-      this.dbChipClass = 'ok';
-    } else {
-      this.dbStatusLabel = `Unreachable (${health.error ?? 'error'})`;
-      this.dbChipClass = 'bad';
-    }
-    this.cdr.detectChanges();
   }
 
-  toggleOffline(ev: Event) {
-    this.session.setOffline((ev as CustomEvent).detail.checked);
+  async savePin(): Promise<void> {
+    if (this.pinInput.trim().length < 4) return;
+    await this.auth.setupOfflinePin(this.pinInput);
+    this.pinInput = '';
   }
 
-  signOut() {
-    this.session.signOut();
-    this.nav.navigateRoot('/login');
+  lockNow(): void {
+    this.auth.lockSession();
   }
 
-  expireSession() {
-    this.session.signOut();
-    this.nav.navigateRoot('/login');
-    this.session.notify('Session expired. Please sign in again.');
+  async syncNow(): Promise<void> {
+    await this.sync.syncNow().catch(() => undefined);
+  }
+
+  async signOut(): Promise<void> {
+    await this.auth.logout();
   }
 }

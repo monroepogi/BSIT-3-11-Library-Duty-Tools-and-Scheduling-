@@ -1,35 +1,35 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>{{ session.role === 'OIC' ? 'Section Roster' : 'My Roster' }}</ion-title>
+    <ion-title>{{ auth.role() === 'OIC' ? 'Section Roster' : 'My Roster' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <div class="vits-page">
 
-    @if (session.offline) {
+    @if (auth.isOffline()) {
       <div class="vits-banner offline">
-        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: showing saved schedule
+        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: reading local cached roster
       </div>
     }
 
     <div class="vits-days">
-      @for (d of days; track d) {
+      @for (d of days; track d.dateStr) {
         <div
           class="vits-day"
           role="button"
           tabindex="0"
-          [class.active]="d === selectedDay"
-          (click)="selectedDay = d"
-          (keyup.enter)="selectedDay = d"
+          [class.active]="d.dateStr === selectedDate()"
+          (click)="selectedDate.set(d.dateStr)"
+          (keyup.enter)="selectedDate.set(d.dateStr)"
         >
-          {{ d }}<small>{{ dates[d] }}</small>
-          @if (hasShift(d)) { <div class="vits-dot"></div> }
+          {{ d.label }}<small>{{ d.dayNum }}</small>
+          @if (hasShift(d.dateStr)) { <div class="vits-dot"></div> }
         </div>
       }
     </div>
 
-    @for (s of dayShifts; track s.id) {
+    @for (s of dayShifts(); track s.id) {
       <div
         class="vits-card tap"
         role="button"
@@ -38,12 +38,15 @@
         (keyup.enter)="open(s.id)"
       >
         <div class="vits-row">
-          <strong>{{ s.startTime }} - {{ s.endTime }}</strong>
-          <span [class]="'vits-chip ' + chip(s.status)">{{ s.status }}</span>
+          <strong>{{ timeLabel(s.startsAt) }} - {{ timeLabel(s.endsAt) }}</strong>
+          <div class="vits-row">
+            @if (s.pendingSync) { <span class="vits-chip warn">Pending sync</span> }
+            <span [class]="'vits-chip ' + chip(s.status)">{{ s.status }}</span>
+          </div>
         </div>
-        <div class="vits-muted">{{ s.section }} | OIC {{ s.oic }}</div>
-        @if (session.role === 'OIC') {
-          <div class="vits-muted">Student: {{ s.student }}</div>
+        <div class="vits-muted">{{ s.sectionName }} | OIC {{ s.oicName }}</div>
+        @if (auth.role() === 'OIC') {
+          <div class="vits-muted">Student: {{ s.userFullName }}</div>
         }
       </div>
     } @empty {

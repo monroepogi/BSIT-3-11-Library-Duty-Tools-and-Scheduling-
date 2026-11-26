@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Home</ion-title>
-    @if (session.role === 'OIC') {
+    @if (auth.role() === 'OIC') {
       <ion-buttons slot="end">
         <ion-button (click)="go('/profile')"><ion-icon slot="icon-only" name="person-outline"></ion-icon></ion-button>
       </ion-buttons>
@@ -12,23 +12,27 @@
 <ion-content [fullscreen]="true">
   <div class="vits-page">
 
-    @if (session.offline) {
+    @if (auth.isOffline()) {
       <div class="vits-banner offline">
-        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: showing saved data
+        <ion-icon name="cloud-offline-outline"></ion-icon> Offline mode: reading local encrypted cache
       </div>
     }
-    @if (session.pendingSync > 0) {
+    @if (sync.pendingCount() > 0) {
       <div class="vits-banner pending">
-        <ion-icon name="sync-outline"></ion-icon> {{ session.pendingSync }} change(s) waiting to sync
+        <ion-icon name="sync-outline"></ion-icon> {{ sync.pendingCount() }} change(s) pending sync
+      </div>
+    }
+    @if (sync.failedOps().length > 0) {
+      <div class="vits-banner bad">
+        <ion-icon name="cloud-offline-outline"></ion-icon> {{ sync.failedOps()[0].label }}: {{ sync.failedOps()[0].lastError }}
       </div>
     }
 
-    <h2 class="vits-heading">Hello, {{ session.userName }}</h2>
-    <p class="vits-muted">{{ session.role === 'OIC' ? 'Officer-in-Charge' : 'Student assistant' }}</p>
+    <h2 class="vits-heading">Hello, {{ auth.userName() }}</h2>
+    <p class="vits-muted">{{ auth.role() === 'OIC' ? 'Officer-in-Charge' : 'Student assistant' }}</p>
 
-    @if (session.role === 'STUDENT') {
-
-      @if (session.onDuty) {
+    @if (auth.role() === 'STUDENT') {
+      @if (auth.onDuty()) {
         <div class="vits-banner duty">
           <ion-icon name="time-outline"></ion-icon> You are ON DUTY
         </div>
@@ -49,7 +53,7 @@
         </div>
       }
 
-      @if (nextShift; as s) {
+      @if (nextShift(); as s) {
         <div
           class="vits-card tap"
           role="button"
@@ -57,11 +61,14 @@
           (click)="go('/shift/' + s.id)"
           (keyup.enter)="go('/shift/' + s.id)"
         >
-          <div class="vits-muted">Next shift</div>
+          <div class="vits-row">
+            <span class="vits-muted">Current / Next shift</span>
+            @if (s.pendingSync) { <span class="vits-chip warn">Pending sync</span> }
+          </div>
           <div class="vits-row">
             <div>
-              <strong>{{ s.day }}, {{ s.date }}</strong>
-              <div class="vits-muted">{{ s.startTime }} - {{ s.endTime }} | {{ s.section }}</div>
+              <strong>{{ s.shiftDate }}</strong>
+              <div class="vits-muted">{{ s.sectionName }} • {{ s.location }}</div>
             </div>
             <ion-icon name="chevron-forward"></ion-icon>
           </div>
@@ -72,13 +79,13 @@
         <div class="vits-ring">
           <svg viewBox="0 0 36 36">
             <circle class="bg" cx="18" cy="18" r="15.9155"></circle>
-            <circle class="fg" cx="18" cy="18" r="15.9155" [attr.stroke-dasharray]="percent + ', 100'"></circle>
+            <circle class="fg" cx="18" cy="18" r="15.9155" [attr.stroke-dasharray]="percent() + ', 100'"></circle>
           </svg>
-          <div class="label">{{ percent }}%</div>
+          <div class="label">{{ percent() }}%</div>
         </div>
         <div>
           <strong>Duty hours</strong>
-          <div class="vits-muted">{{ hours.done }} of {{ hours.required }} hours completed</div>
+          <div class="vits-muted">{{ hoursDone() }} of {{ hoursRequired() }} hours completed</div>
         </div>
       </div>
 
@@ -87,15 +94,19 @@
       </ion-button>
     }
 
-    @if (session.role === 'OIC') {
+    @if (auth.role() === 'OIC') {
       <ion-button expand="block" (click)="go('/scan')">
         <ion-icon slot="start" name="scan-outline"></ion-icon> Scan Student QR
       </ion-button>
 
       <h3 class="vits-heading">Clocked-in students</h3>
-      @for (c of clockedIn; track c) {
+      @for (c of clockedIn(); track c.name) {
         <div class="vits-card vits-row">
-          <span>{{ c }}</span><span class="vits-chip ok">On duty</span>
+          <span>{{ c.name }}</span>
+          <div class="vits-row">
+            @if (c.pendingSync) { <span class="vits-chip warn">Pending sync</span> }
+            <span class="vits-chip ok">On duty</span>
+          </div>
         </div>
       } @empty {
         <div class="vits-empty">No students clocked in yet.</div>

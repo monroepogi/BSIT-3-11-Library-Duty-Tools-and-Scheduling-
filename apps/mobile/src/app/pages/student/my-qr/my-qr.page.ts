@@ -1,79 +1,101 @@
-import { Component, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
 import {
-  IonHeader,
-  IonToolbar,
-  IonButtons,
   IonBackButton,
-  IonTitle,
+  IonButton,
+  IonButtons,
   IonContent,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
 } from '@ionic/angular';
-import { SessionService } from '../../../services/session/session';
+import { generateNonceHex, signStudentQrPayload } from '@vits/shared-crypto';
+import QRCode from 'qrcode';
+import { AuthService } from '../../../core/auth.service';
+import { SecureVaultService } from '../../../core/secure-vault.service';
 
 @Component({
   selector: 'app-my-qr',
   templateUrl: './my-qr.page.html',
   standalone: true,
-  imports: [IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent],
+  imports: [IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent, IonButton],
 })
 export class MyQrPage implements OnDestroy {
-  readonly session = inject(SessionService);
-  private readonly cdr = inject(ChangeDetectorRef);
+  readonly auth = inject(AuthService);
+  private readonly vault = inject(SecureVaultService);
 
-  size = 21;
-  cells: boolean[] = [];
-  seconds = 30;
+  @ViewChild('qrCanvas') qrCanvas?: ElementRef<HTMLCanvasElement>;
+
+  readonly seconds = signal(30);
+  readonly qrJson = signal('');
+  readonly error = signal<string | null>(null);
   private timer?: ReturnType<typeof setInterval>;
 
-  ionViewWillEnter() {
-    this.regenerate();
+  ionViewWillEnter(): void {
+    void this.regenerate();
     this.start();
   }
-  ionViewWillLeave() {
-    this.stop();
-  }
-  ngOnDestroy() {
+
+  ionViewWillLeave(): void {
     this.stop();
   }
 
-  // mock rotating student duty QR: pseudo-random grid + three finder squares
-  regenerate() {
-    let s = (Date.now() % 2147483646) + 1;
-    const out: boolean[] = [];
-    for (let r = 0; r < this.size; r++) {
-      for (let c = 0; c < this.size; c++) {
-        s = (s * 48271) % 2147483647;
-        const f = this.finder(r, c);
-        out.push(f === null ? s % 2 === 0 : f);
-      }
+  ngOnDestroy(): void {
+    this.stop();
+  }
+
+  async regenerate(): Promise<void> {
+    const user = this.auth.currentUser();
+    if (!user) {
+      this.error.set('Not signed in.');
+      return;
     }
-    this.cells = out;
-    this.seconds = 30;
-    this.cdr.detectChanges();
+
+    const cert = await this.vault.getStudentPassCert(user.id);
+    if (!cert) {
+      this.error.set('No cached Student Pass Certificate. Connect once while online to download your duty pass.');
+      return;
+    }
+
+    const keypair = await this.vault.getOrCreateDeviceKeypair(user.id);
+    const payload = signStudentQrPayload(cert, keypair.privateKeyB64, Date.now(), generateNonceHex(12));
+    const serialized = JSON.stringify(payload);
+
+    this.error.set(null);
+    this.qrJson.set(serialized);
+    this.seconds.set(30);
+
+    const canvas = this.qrCanvas?.nativeElement;
+    if (canvas) {
+      await QRCode.toCanvas(canvas, serialized, {
+        width: 240,
+        margin: 1,
+        errorCorrectionLevel: 'M',
+      });
+    }
   }
 
-  private finder(r: number, c: number): boolean | null {
-    const n = this.size;
-    const inBox = (r0: number, c0: number) => r >= r0 && r < r0 + 7 && c >= c0 && c < c0 + 7;
-    let box: [number, number] | null = null;
-    if (inBox(0, 0)) box = [0, 0];
-    else if (inBox(0, n - 7)) box = [0, n - 7];
-    else if (inBox(n - 7, 0)) box = [n - 7, 0];
-    if (!box) return null;
-    const lr = r - box[0];
-    const lc = c - box[1];
-    return lr === 0 || lr === 6 || lc === 0 || lc === 6 || (lr >= 2 && lr <= 4 && lc >= 2 && lc <= 4);
+  async copyPayload(): Promise<void> {
+    const text = this.qrJson();
+    if (!text) return;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    }
+    await this.auth.notify('Signed QR payload copied');
   }
 
-  private start() {
+  private start(): void {
     this.stop();
     this.timer = setInterval(() => {
-      this.seconds--;
-      if (this.seconds <= 0) this.regenerate();
-      this.cdr.detectChanges();
+      const next = this.seconds() - 1;
+      if (next <= 0) {
+        void this.regenerate();
+      } else {
+        this.seconds.set(next);
+      }
     }, 1000);
   }
 
-  private stop() {
+  private stop(): void {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = undefined;
