@@ -12,7 +12,7 @@ import { AdminAuthService } from '../../core/admin-auth.service';
     <div class="admin-login-shell">
       <div class="admin-login-card">
         <div class="vits-row" style="justify-content: flex-start; margin-bottom: var(--vits-space-4);">
-          <div class="admin-brand-mark">V</div>
+          <div class="admin-brand-mark"><img src="vits-logo.png" alt="VITS" /></div>
           <div>
             <h1 class="vits-heading" style="margin: 0;">VITS Admin Portal</h1>
             <div class="vits-muted">Web-only administrative console</div>

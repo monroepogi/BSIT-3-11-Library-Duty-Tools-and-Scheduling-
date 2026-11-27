@@ -18,7 +18,7 @@ interface NavItem {
     <div class="admin-shell">
       <aside class="admin-sidebar" [class.open]="sidebarOpen()">
         <div class="admin-brand">
-          <div class="admin-brand-mark">V</div>
+          <div class="admin-brand-mark"><img src="vits-logo.png" alt="VITS" /></div>
           <div>
             <div class="admin-brand-title">VITS Admin</div>
             <div class="admin-brand-sub">Library Portal (Web Only)</div>

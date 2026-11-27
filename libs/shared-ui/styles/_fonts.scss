@@ -1,35 +1,16 @@
-// Owner-supplied licensed fonts (placed in libs/shared-ui/assets/fonts/ -> /assets/fonts/).
-// Falls back cleanly to system-ui / sans-serif when font files are not yet supplied.
+// Bundled web fonts (offline-first: no CDN calls). Files live in libs/shared-ui/assets/fonts/
+// and are copied to /assets/fonts by angular.json. Inter (body) + Plus Jakarta Sans (headings)
+// match the VITS Figma prototype. Both are SIL OFL licensed (via @fontsource).
 
-@font-face {
-  font-family: 'Knockout Welterweight';
-  src:
-    local('Knockout Welterweight'),
-    local('Knockout-Welterweight'),
-    url('/assets/fonts/Knockout-Welterweight.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Marjari';
-  src:
-    local('Marjari'),
-    local('Marjari Regular'),
-    url('/assets/fonts/Marjari-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Marjari';
-  src:
-    local('Marjari Bold'),
-    local('Marjari-Bold'),
-    url('/assets/fonts/Marjari-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+@font-face { font-family: 'Inter'; font-weight: 400; font-style: normal; font-display: swap;
+  src: url('/assets/fonts/Inter-400.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 500; font-style: normal; font-display: swap;
+  src: url('/assets/fonts/Inter-500.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; font-style: normal; font-display: swap;
+  src: url('/assets/fonts/Inter-600.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 700; font-style: normal; font-display: swap;
+  src: url('/assets/fonts/Inter-700.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 700; font-style: normal; font-display: swap;
+  src: url('/assets/fonts/PlusJakartaSans-700.woff2') format('woff2'); }
+@font-face { font-family: 'Plus Jakarta Sans'; font-weight: 800; font-style: normal; font-display: swap;
+  src: url('/assets/fonts/PlusJakartaSans-800.woff2') format('woff2'); }
